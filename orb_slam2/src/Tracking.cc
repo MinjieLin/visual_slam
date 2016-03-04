@@ -115,7 +115,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     int nFeatures = fSettings["ORBextractor.nFeatures"];
     float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
     int nLevels = fSettings["ORBextractor.nLevels"];
-    int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
+    int fIniThFAST                                                                                       = fSettings["ORBextractor.iniThFAST"];
     int fMinThFAST = fSettings["ORBextractor.minThFAST"];
 
     mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);

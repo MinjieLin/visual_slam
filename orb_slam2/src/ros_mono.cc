@@ -81,17 +81,22 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "Mono");
     ros::start();
 
-    if(argc != 3)
-    {
-        cerr << endl << "Usage: rosrun ORB_SLAM2 Mono path_to_vocabulary path_to_settings" << endl;        
+    ros::NodeHandle nh("~");
+
+    string vocab_path;
+    string settings_path;
+    if (!nh.getParam("vocabulary_path",vocab_path)){
+        ROS_ERROR("vocabulary_path parameter was not specified");
         ros::shutdown();
         return 1;
     }
-
+    if (!nh.getParam("settings_path",settings_path)){
+        ROS_ERROR("settings_path parameter was not specified");
+        ros::shutdown();
+        return 1;
+    }
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    mpSLAM = new ORB_SLAM2::System(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
-
-    ros::NodeHandle nh("~");
+    mpSLAM = new ORB_SLAM2::System(vocab_path, settings_path,ORB_SLAM2::System::MONOCULAR,true);
 
     nh.param("debug_view", debug_view, false);
 

@@ -17,7 +17,7 @@
     </node> 
 
 
-   <node pkg="orb_slam2" type="feature_detector" name="feature_detector" output="screen">
+    <node pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
       <param name="publish_image_" value="true" />
       <remap from="image" to="/image_rect"/>
       <remap from="camera_info" to="/cam/camera_info"/>
