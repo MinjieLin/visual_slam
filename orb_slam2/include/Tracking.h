@@ -42,6 +42,9 @@
 
 #include <mutex>
 
+#include "ros/ros.h"
+#include "orb_slam2/TrackingState.h"
+
 namespace ORB_SLAM2
 {
 
@@ -211,6 +214,8 @@ protected:
     bool mbRGB;
 
     list<MapPoint*> mlpTemporalPoints;
+
+    ros::Publisher state_pub;
 };
 
 } //namespace ORB_SLAM

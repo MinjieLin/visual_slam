@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   dynamic_reconfigure 
   visual_features_extractor
+  message_generation
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
@@ -38,6 +39,18 @@ find_package(OpenCV 2.4.3 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin)
 find_package(Boost REQUIRED COMPONENTS signals thread)
+
+## Generate messages in the 'msg' folder
+add_message_files(
+   FILES
+   TrackingState.msg
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
+)
 
 catkin_package()
 
