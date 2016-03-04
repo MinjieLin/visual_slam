@@ -38,6 +38,7 @@
 #include<mutex>
 
 #include "visual_features_extractor/Frame.h"
+#include "ros/ros.h"
 
 
 using namespace std;
@@ -112,11 +113,17 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
     // Load ORB parameters
 
-    int nFeatures = fSettings["ORBextractor.nFeatures"];
-    float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
-    int nLevels = fSettings["ORBextractor.nLevels"];
-    int fIniThFAST                                                                                       = fSettings["ORBextractor.iniThFAST"];
-    int fMinThFAST = fSettings["ORBextractor.minThFAST"];
+    ros::NodeHandle nh("~");
+    int nFeatures;
+    float fScaleFactor;
+    int nLevels;
+    float fIniThFAST;
+    float fMinThFAST;
+    nh.param("ORBextractor/nFeatures", nFeatures,  2000);
+    nh.param("ORBextractor/scaleFactor", fScaleFactor, 1.2f);
+    nh.param("ORBextractor/nLevels", nLevels, 8);
+    nh.param("ORBextractor/iniThFAST", fIniThFAST, 15.0f);
+    nh.param("ORBextractor/minThFAST", fMinThFAST, 7.0f);
 
     mpORBextractorLeft = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     // TODO: add configuration server call to change the number of features
@@ -129,7 +136,6 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     cout << "- Initial Fast Threshold: " << fIniThFAST << endl;
     cout << "- Minimum Fast Threshold: " << fMinThFAST << endl;
 
-    ros::NodeHandle nh("~");
     state_pub = nh.advertise<orb_slam2::TrackingState>("tracking_state", 1);
 }
 

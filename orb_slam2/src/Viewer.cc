@@ -45,10 +45,11 @@ Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer
         mImageHeight = 480;
     }
 
-    mViewpointX = fSettings["Viewer.ViewpointX"];
-    mViewpointY = fSettings["Viewer.ViewpointY"];
-    mViewpointZ = fSettings["Viewer.ViewpointZ"];
-    mViewpointF = fSettings["Viewer.ViewpointF"];
+    ros::NodeHandle nh("~");
+    nh.param("Viewer/ViewpointX", mViewpointX, 0.0f);
+    nh.param("Viewer/ViewpointY", mViewpointY, -10.0f);
+    nh.param("Viewer/ViewpointZ", mViewpointZ, -.1f);
+    nh.param("Viewer/ViewpointF", mViewpointF, 2000.0f);
 }
 
 void Viewer::Run()

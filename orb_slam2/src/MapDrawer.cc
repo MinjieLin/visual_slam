@@ -23,21 +23,21 @@
 #include "KeyFrame.h"
 #include <pangolin/pangolin.h>
 #include <mutex>
+#include "ros/ros.h"
 
 namespace ORB_SLAM2
 {
 
 
-MapDrawer::MapDrawer(Map* pMap, const string &strSettingPath):mpMap(pMap)
+MapDrawer::MapDrawer(Map* pMap):mpMap(pMap)
 {
-    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
-
-    mKeyFrameSize = fSettings["Viewer.KeyFrameSize"];
-    mKeyFrameLineWidth = fSettings["Viewer.KeyFrameLineWidth"];
-    mGraphLineWidth = fSettings["Viewer.GraphLineWidth"];
-    mPointSize = fSettings["Viewer.PointSize"];
-    mCameraSize = fSettings["Viewer.CameraSize"];
-    mCameraLineWidth = fSettings["Viewer.CameraLineWidth"];
+    ros::NodeHandle nh("~");
+    nh.param("Viewer/KeyFrameSize", mKeyFrameSize,  .1f);
+    nh.param("Viewer/KeyFrameLineWidth", mKeyFrameLineWidth, 1.0f);
+    nh.param("Viewer/GraphLineWidth", mGraphLineWidth, 1.0f);
+    nh.param("Viewer/PointSize", mPointSize, 2.0f);
+    nh.param("Viewer/CameraSize", mCameraSize, 0.15f);
+    nh.param("Viewer/CameraLineWidth", mCameraLineWidth, 2.0f);
 
 }
 
