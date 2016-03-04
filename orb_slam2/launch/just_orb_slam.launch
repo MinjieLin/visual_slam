@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen" args="/home/biorob/catkin_ws/src/orb_slam2/Vocabulary/ORBvoc.txt /home/biorob/catkin_ws/src/orb_slam2/Examples/Monocular/test.yaml">
+      <remap from="~image" to="/image_rect"/>
+      <remap from="~features" to="/features"/>
+      <param name="debug_view" value="false"/>
+    </node>
+    
+</launch>

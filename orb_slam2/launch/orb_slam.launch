@@ -1,0 +1,29 @@
+<launch>
+    <node pkg="usb_cam" type="usb_cam_node" name="cam" output="screen">
+      <param name="video_device" value="/dev/video0" />
+      <param name="image_width" value="640" />
+      <param name="image_height" value="480" />
+      <param name="camera_frame_id" value="usb_cam" />
+      <param name="framerate" value="30" />
+      <param name="pixel_format" value="yuyv" />
+      <param name="io_method" value="mmap" />
+    </node>
+
+    <node pkg="image_proc" type="image_proc" name="image_proc">
+      <remap from="image_raw" to="/cam/image_raw"/>
+      <remap from="camera_info" to="/cam/camera_info"/>
+    </node> 
+
+    <node pkg="orb_slam2" type="feature_detector" name="feature_detector" output="screen">
+      <param name="publish_image_" value="true" />
+      <remap from="image" to="/image_rect"/>
+      <remap from="camera_info" to="/cam/camera_info"/>
+    </node> 
+ 
+    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen" args="/home/biorob/catkin_ws/src/orb_slam2/Vocabulary/ORBvoc.txt /home/biorob/catkin_ws/src/orb_slam2/Examples/Monocular/test.yaml">
+      <remap from="image" to="/image_rect"/>
+      <remap from="features" to="/features"/>
+      
+    </node>
+    
+</launch>
