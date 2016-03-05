@@ -29,9 +29,10 @@
 namespace ORB_SLAM2
 {
 
-System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               const bool bUseViewer):mSensor(sensor),mbReset(false),mbActivateLocalizationMode(false),
-        mbDeactivateLocalizationMode(false)
+System::System(const string &strVocFile, const sensor_msgs::CameraInfoConstPtr &cam_info,
+               const eSensor sensor, const bool bUseViewer) :
+    mSensor(sensor),mbReset(false),mbActivateLocalizationMode(false),
+    mbDeactivateLocalizationMode(false)
 {
     // Output welcome message
     cout << endl <<
@@ -70,7 +71,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                             mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
+                             mpMap, mpKeyFrameDatabase, cam_info, mSensor);
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
@@ -81,7 +82,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
     //Initialize the Viewer thread and launch
-    mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
+    mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,cam_info);
     if(bUseViewer)
         mptViewer = new thread(&Viewer::Run, mpViewer);
 
@@ -96,6 +97,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     mpLoopCloser->SetTracker(mpTracker);
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
+
+    Frame::InitialComputations(cam_info);
 }
 
 cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const visual_features_extractor::Frame & frame)

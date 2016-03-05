@@ -27,18 +27,18 @@ namespace ORB_SLAM2
 {
 
 long unsigned int Frame::nNextId=0;
-bool Frame::mbInitialComputations=true;
 float Frame::cx, Frame::cy, Frame::fx, Frame::fy, Frame::invfx, Frame::invfy;
 float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
 float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
+cv::Mat Frame::mK; cv::Mat Frame::mDistCoef;
 
 Frame::Frame()
 {}
 
 //Copy Constructor
 Frame::Frame(const Frame &frame)
-    :mpORBvocabulary(frame.mpORBvocabulary), mpORBextractorLeft(frame.mpORBextractorLeft), mpORBextractorRight(frame.mpORBextractorRight),
-     mTimeStamp(frame.mTimeStamp), mK(frame.mK.clone()), mDistCoef(frame.mDistCoef.clone()),
+    :mpORBvocabulary(frame.mpORBvocabulary), mpORBextractorLeft(frame.mpORBextractorLeft),
+     mpORBextractorRight(frame.mpORBextractorRight),mTimeStamp(frame.mTimeStamp),
      mbf(frame.mbf), mb(frame.mb), mThDepth(frame.mThDepth), N(frame.N), mvKeys(frame.mvKeys),
      mvKeysRight(frame.mvKeysRight), mvKeysUn(frame.mvKeysUn),  mvuRight(frame.mvuRight),
      mvDepth(frame.mvDepth), mBowVec(frame.mBowVec), mFeatVec(frame.mFeatVec),
@@ -55,9 +55,11 @@ Frame::Frame(const Frame &frame)
 }
 
 
-Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const visual_features_extractor::Frame & frame, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
+Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const visual_features_extractor::Frame & frame,
+             ORBextractor* extractor,ORBVocabulary* voc, const float &bf,
+             const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
-     mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
+     mTimeStamp(timeStamp), mbf(bf), mThDepth(thDepth)
 {
     // Frame ID
     mnId=nNextId++;
@@ -79,24 +81,6 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const visual_featur
 
     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
     mvbOutlier = vector<bool>(N,false);
-
-    // This is done only for the first Frame (or after a change in the calibration)
-    if(mbInitialComputations)
-    {
-        ComputeImageBounds(imGray);
-
-        mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
-        mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
-
-        fx = K.at<float>(0,0);
-        fy = K.at<float>(1,1);
-        cx = K.at<float>(0,2);
-        cy = K.at<float>(1,2);
-        invfx = 1.0f/fx;
-        invfy = 1.0f/fy;
-
-        mbInitialComputations=false;
-    }
 
     mb = mbf/fx;
 
@@ -306,34 +290,81 @@ void Frame::UndistortKeyPoints()
     }
 }
 
-void Frame::ComputeImageBounds(const cv::Mat &imLeft)
+void Frame::InitialComputations(const sensor_msgs::CameraInfoConstPtr & cam_info)
 {
-    if(mDistCoef.at<float>(0)!=0.0)
+    fx = cam_info->K.at(0);
+    fy = cam_info->K.at(4);
+    cx = cam_info->K.at(2);
+    cy = cam_info->K.at(5);
+    invfx = 1.0f/fx;
+    invfy = 1.0f/fy;
+
+    cv::Mat K = cv::Mat::eye(3,3,CV_32F);
+    K.at<float>(0,0) = fx;
+    K.at<float>(1,1) = fy;
+    K.at<float>(0,2) = cx;
+    K.at<float>(1,2) = cy;
+    K.copyTo(mK);
+
+    cv::Mat DistCoef(4,1,CV_32F);
+    // TODO: check that this is ok
+    DistCoef.at<float>(0) = cam_info->D.at(0);
+    DistCoef.at<float>(1) = cam_info->D.at(1);
+    DistCoef.at<float>(2) = cam_info->D.at(2);
+    DistCoef.at<float>(3) = cam_info->D.at(3);
+    const float k3 = cam_info->D.at(4);
+    if(k3!=0)
+    {
+        DistCoef.resize(5);
+        DistCoef.at<float>(4) = k3;
+    }
+    DistCoef.copyTo(mDistCoef);
+
+    int fps;
+    ros::NodeHandle nh("~");
+    nh.param("fps", fps, 30);
+
+    cout << endl << "Camera Parameters: " << endl;
+    cout << "- fx: " << fx << endl;
+    cout << "- fy: " << fy << endl;
+    cout << "- cx: " << cx << endl;
+    cout << "- cy: " << cy << endl;
+    cout << "- k1: " << DistCoef.at<float>(0) << endl;
+    cout << "- k2: " << DistCoef.at<float>(1) << endl;
+    if(DistCoef.rows==5)
+        cout << "- k3: " << DistCoef.at<float>(4) << endl;
+    cout << "- p1: " << DistCoef.at<float>(2) << endl;
+    cout << "- p2: " << DistCoef.at<float>(3) << endl;
+    cout << "- fps: " << fps << endl;
+
+    if(cam_info->D.at(0) != 0.0)
     {
         cv::Mat mat(4,2,CV_32F);
         mat.at<float>(0,0)=0.0; mat.at<float>(0,1)=0.0;
-        mat.at<float>(1,0)=imLeft.cols; mat.at<float>(1,1)=0.0;
-        mat.at<float>(2,0)=0.0; mat.at<float>(2,1)=imLeft.rows;
-        mat.at<float>(3,0)=imLeft.cols; mat.at<float>(3,1)=imLeft.rows;
+        mat.at<float>(1,0)=cam_info->width; mat.at<float>(1,1)=0.0;
+        mat.at<float>(2,0)=0.0; mat.at<float>(2,1)=cam_info->height;
+        mat.at<float>(3,0)=cam_info->width; mat.at<float>(3,1)=cam_info->height;
 
         // Undistort corners
         mat=mat.reshape(2);
-        cv::undistortPoints(mat,mat,mK,mDistCoef,cv::Mat(),mK);
+        cv::undistortPoints(mat,mat,mK,DistCoef,cv::Mat(),mK);
         mat=mat.reshape(1);
 
         mnMinX = min(mat.at<float>(0,0),mat.at<float>(2,0));
         mnMaxX = max(mat.at<float>(1,0),mat.at<float>(3,0));
         mnMinY = min(mat.at<float>(0,1),mat.at<float>(1,1));
         mnMaxY = max(mat.at<float>(2,1),mat.at<float>(3,1));
-
     }
     else
     {
         mnMinX = 0.0f;
-        mnMaxX = imLeft.cols;
+        mnMaxX = cam_info->width;
         mnMinY = 0.0f;
-        mnMaxY = imLeft.rows;
+        mnMaxY = cam_info->height;
     }
+
+    mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
+    mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
 }
 
 } //namespace ORB_SLAM

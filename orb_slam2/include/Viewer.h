@@ -28,6 +28,7 @@
 #include "System.h"
 
 #include <mutex>
+#include "sensor_msgs/CameraInfo.h"
 
 namespace ORB_SLAM2
 {
@@ -40,7 +41,8 @@ class System;
 class Viewer
 {
 public:
-    Viewer(System* pSystem, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Tracking *pTracking, const string &strSettingPath);
+    Viewer(System* pSystem, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer,
+           Tracking *pTracking, const sensor_msgs::CameraInfoConstPtr & frame);
 
     // Main thread function. Draw points, keyframes, the current camera pose and the last processed
     // frame. Drawing is refreshed according to the camera fps. We use Pangolin.

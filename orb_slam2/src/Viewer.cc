@@ -23,29 +23,33 @@
 
 #include <mutex>
 
+#include "ros/ros.h"
+
 namespace ORB_SLAM2
 {
 
-Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Tracking *pTracking, const string &strSettingPath):
+Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer,
+               Tracking *pTracking, const sensor_msgs::CameraInfoConstPtr & cam_info):
     mpSystem(pSystem), mpFrameDrawer(pFrameDrawer),mpMapDrawer(pMapDrawer), mpTracker(pTracking),
     mbFinishRequested(false), mbFinished(true), mbStopped(false), mbStopRequested(false)
 {
-    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+    ros::NodeHandle nh("~");
 
-    float fps = fSettings["Camera.fps"];
+    int fps;
+    nh.param("fps", fps, 30);
     if(fps<1)
         fps=30;
     mT = 1e3/fps;
 
-    mImageWidth = fSettings["Camera.width"];
-    mImageHeight = fSettings["Camera.height"];
+    mImageWidth = cam_info->width;
+    mImageHeight = cam_info->height;
     if(mImageWidth<1 || mImageHeight<1)
     {
         mImageWidth = 640;
         mImageHeight = 480;
     }
 
-    ros::NodeHandle nh("~");
+
     nh.param("Viewer/ViewpointX", mViewpointX, 0.0f);
     nh.param("Viewer/ViewpointY", mViewpointY, -10.0f);
     nh.param("Viewer/ViewpointZ", mViewpointZ, -.1f);

@@ -34,6 +34,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include "visual_features_extractor/Frame.h"
+#include "sensor_msgs/CameraInfo.h"
 
 using namespace std;
 using namespace sensor_msgs;
@@ -46,6 +47,9 @@ ros::Subscriber frame_sub;
 message_filters::Subscriber<sensor_msgs::Image > * image_filter_sub;
 message_filters::Subscriber<visual_features_extractor::Frame >  * frame_filter_sub;
 message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame > * msg_sync;
+ros::Subscriber cam_info_sub;
+
+string vocab_path;;
 
 void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
                           const visual_features_extractor::FrameConstPtr & frame)
@@ -76,27 +80,13 @@ void grabFeatures(const visual_features_extractor::FrameConstPtr & frame)
     mpSLAM->TrackMonocular(emptyMat,frame->header.stamp.toSec(), *frame);
 }
 
-int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "Mono");
-    ros::start();
+void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
+    ROS_INFO("Received the camera parameters. Proceeding to setup SLAM");
 
     ros::NodeHandle nh("~");
 
-    string vocab_path;
-    string settings_path;
-    if (!nh.getParam("vocabulary_path",vocab_path)){
-        ROS_ERROR("vocabulary_path parameter was not specified");
-        ros::shutdown();
-        return 1;
-    }
-    if (!nh.getParam("settings_path",settings_path)){
-        ROS_ERROR("settings_path parameter was not specified");
-        ros::shutdown();
-        return 1;
-    }
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    mpSLAM = new ORB_SLAM2::System(vocab_path, settings_path,ORB_SLAM2::System::MONOCULAR,true);
+    mpSLAM = new ORB_SLAM2::System(vocab_path, cam_info,ORB_SLAM2::System::MONOCULAR,true);
 
     nh.param("debug_view", debug_view, false);
 
@@ -110,6 +100,26 @@ int main(int argc, char **argv)
         ROS_INFO("Subscribing to features only");
         frame_sub = nh.subscribe("features", 1, &grabFeatures);
     }
+
+    cam_info_sub.shutdown();
+}
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "Mono");
+    ros::start();
+
+    ros::NodeHandle nh("~");
+
+    if (!nh.getParam("vocabulary_path",vocab_path)){
+        ROS_ERROR("vocabulary_path parameter was not specified");
+        ros::shutdown();
+        return 1;
+    }
+
+    cam_info_sub = nh.subscribe("camera_info", 1, &grab_cam_info_and_setup);
+
+    ROS_INFO("Waiting for camera parameters to initialize SLAM");
 
     ros::spin();
 

@@ -44,6 +44,7 @@
 
 #include "ros/ros.h"
 #include "orb_slam2/TrackingState.h"
+#include "sensor_msgs/CameraInfo.h"
 
 namespace ORB_SLAM2
 {
@@ -59,8 +60,9 @@ class Tracking
 {  
 
 public:
-    Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Map* pMap,
-             KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor);
+    Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer,
+             Map* pMap, KeyFrameDatabase* pKFDB, const sensor_msgs::CameraInfoConstPtr & cam_info,
+             const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, const visual_features_extractor::Frame & frame);
@@ -69,10 +71,12 @@ public:
     void SetLoopClosing(LoopClosing* pLoopClosing);
     void SetViewer(Viewer* pViewer);
 
+
+    // TODO: implement this with dynamic_conf or with new camera_info
     // Load new settings
     // The focal lenght should be similar or scale prediction will fail when projecting points
     // TODO: Modify MapPoint::PredictScale to take into account focal lenght
-    void ChangeCalibration(const string &strSettingPath);
+    //void ChangeCalibration(const string &strSettingPath);
 
     // Use this function if you have deactivated local mapping and you only want to localize the camera.
     void InformOnlyTracking(const bool &flag);

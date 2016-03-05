@@ -37,6 +37,7 @@
 #include "Viewer.h"
 
 #include "visual_features_extractor/Frame.h"
+#include "sensor_msgs/CameraInfo.h"
 
 namespace ORB_SLAM2
 {
@@ -61,7 +62,9 @@ public:
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-    System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true);
+    System(const string &strVocFile,
+           const sensor_msgs::CameraInfoConstPtr & cam_info,
+           const eSensor sensor, const bool bUseViewer = true);
 
     // Proccess the given monocular frame
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.

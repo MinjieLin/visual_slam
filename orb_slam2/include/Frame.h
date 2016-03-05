@@ -33,6 +33,8 @@
 #include "visual_features_extractor/Frame.h"
 
 #include <opencv2/opencv.hpp>
+#include "sensor_msgs/CameraInfo.h"
+#include "ros/ros.h"
 
 namespace ORB_SLAM2
 {
@@ -51,7 +53,9 @@ public:
     Frame(const Frame &frame);
 
     // Constructor for Monocular cameras.
-    Frame(const cv::Mat &imGray, const double &timeStamp, const visual_features_extractor::Frame & frame, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    Frame(const cv::Mat &imGray, const double &timeStamp,
+          const visual_features_extractor::Frame & frame, ORBextractor* extractor,
+          ORBVocabulary* voc, const float &bf, const float &thDepth);
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(const cv::Mat &imGray, const visual_features_extractor::Frame & frame);
@@ -122,14 +126,14 @@ public:
     double mTimeStamp;
 
     // Calibration matrix and OpenCV distortion parameters.
-    cv::Mat mK;
+    static cv::Mat mK;
     static float fx;
     static float fy;
     static float cx;
     static float cy;
     static float invfx;
     static float invfy;
-    cv::Mat mDistCoef;
+    static cv::Mat mDistCoef;
 
     // Stereo baseline multiplied by fx.
     float mbf;
@@ -189,8 +193,8 @@ public:
     static float mnMinY;
     static float mnMaxY;
 
-    static bool mbInitialComputations;
-
+    // Computes image bounds for the undistorted image (called in the constructor).
+    void static InitialComputations(const sensor_msgs::CameraInfoConstPtr & frame);
 
 private:
 
@@ -199,8 +203,7 @@ private:
     // (called in the constructor).
     void UndistortKeyPoints();
 
-    // Computes image bounds for the undistorted image (called in the constructor).
-    void ComputeImageBounds(const cv::Mat &imLeft);
+
 
     // Assign keypoints to the grid for speed up feature matching (called in the constructor).
     void AssignFeaturesToGrid();

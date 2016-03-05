@@ -7,13 +7,15 @@
 
     <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
       <remap from="~image" to="/image_rect"/>
+      <remap from="~camera_info" to="/cam/camera_info"/>
       <remap from="~features" to="/features"/>
       <param name="debug_view" value="true"/>
       <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
       <param name="settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
+      <param name="fps" value="15"/>
     </node>
     
-     <node pkg="rosbag" type="play" name="player" output="screen" args="--clock --loop /home/biorob/catkin_ws/src/visual_slam/orb_slam2/runs/succesfullInit_2016-03-03-13-10-14.bag"/>
+     <node pkg="rosbag" type="play" name="player" output="screen" args="--clock --loop /home/biorob/catkin_ws/src/visual_slam/orb_slam2/runs/succesfullInit_2016-03-04-17-44-20.bag"/>
     
   
 <!--
