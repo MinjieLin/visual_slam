@@ -61,16 +61,26 @@ System::System(const string &strVocFile, const sensor_msgs::CameraInfoConstPtr &
     //Create KeyFrame Database
     mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
 
+    cout << "KeyFrame Database loaded!" << endl;
+
     //Create the Map
     mpMap = new Map();
 
+    cout << "Map loaded!" << endl;
+
     //Create Drawers. These are used by the Viewer
-    mpFrameDrawer = new FrameDrawer(mpMap);
-    mpMapDrawer = new MapDrawer(mpMap);
+//    mpFrameDrawer = new FrameDrawer(mpMap);
+//    mpMapDrawer = new MapDrawer(mpMap);
+
+    mpFramePublisher = new FramePublisher();
+    mpFramePublisher->SetMap(mpMap);
+    cout << "Frame Publisher loaded!" << endl;
+    mpMapPublisher = new MapPublisher(mpMap);
+    cout << "Map publisher loaded!" << endl;
 
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
-    mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
+    mpTracker = new Tracking(this, mpVocabulary, mpFramePublisher, mpMapPublisher,
                              mpMap, mpKeyFrameDatabase, cam_info, mSensor);
 
     //Initialize the Local Mapping thread and launch
@@ -82,11 +92,11 @@ System::System(const string &strVocFile, const sensor_msgs::CameraInfoConstPtr &
     mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
     //Initialize the Viewer thread and launch
-    mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,cam_info);
-    if(bUseViewer)
-        mptViewer = new thread(&Viewer::Run, mpViewer);
+//    mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,cam_info);
+//    if(bUseViewer)
+//        mptViewer = new thread(&Viewer::Run, mpViewer);
 
-    mpTracker->SetViewer(mpViewer);
+//    mpTracker->SetViewer(mpViewer);
 
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
@@ -168,11 +178,11 @@ void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
     mpLoopCloser->RequestFinish();
-    mpViewer->RequestFinish();
+//    mpViewer->RequestFinish();
 
     // Wait until all thread have effectively stopped
     while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished()  ||
-          !mpViewer->isFinished()      || mpLoopCloser->isRunningGBA())
+         mpLoopCloser->isRunningGBA())
     {
         usleep(5000);
     }

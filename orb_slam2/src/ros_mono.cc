@@ -88,17 +88,19 @@ void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     mpSLAM = new ORB_SLAM2::System(vocab_path, cam_info,ORB_SLAM2::System::MONOCULAR,true);
 
+    ROS_INFO("SLAM Initialized");
+
     nh.param("debug_view", debug_view, true);
 
     if (debug_view){
         ROS_INFO("Subscribing to images and features");
-        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "/usb_cam/image_raw", 1);
-        frame_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "/features", 1);
+        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "/usb_cam/image_raw", 10);
+        frame_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "/features", 10);
         msg_sync = new message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame>(*image_filter_sub, *frame_filter_sub, 10);
         msg_sync->registerCallback(boost::bind(&grabImageAndFeatures, _1, _2));
     } else {
         ROS_INFO("Subscribing to features only");
-        frame_sub = nh.subscribe("/features", 1, &grabFeatures);
+        frame_sub = nh.subscribe("/features", 10, &grabFeatures);
     }
 
     cam_info_sub.shutdown();
@@ -113,7 +115,7 @@ int main(int argc, char **argv)
 
     if (!nh.getParam("vocabulary_path",vocab_path)){
         ROS_INFO("Vocabulary Path Not Provided. Using Default.");
-        vocab_path = "/home/muhaimen/ROS/src/visual_slam/orb_slam2/Vocabulary/ORBvoc.txt";
+        vocab_path = "/home/biorob/catkin_ws/src/visual_slam/orb_slam2/Vocabulary/ORBvoc.txt.full";
     }
 
     cam_info_sub = nh.subscribe("/usb_cam/camera_info", 1, &grab_cam_info_and_setup);

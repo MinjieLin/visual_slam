@@ -25,7 +25,6 @@
 #include<opencv2/features2d/features2d.hpp>
 
 #include"ORBmatcher.h"
-#include"FrameDrawer.h"
 #include"Converter.h"
 #include"Map.h"
 #include"Initializer.h"
@@ -34,23 +33,23 @@
 #include"PnPsolver.h"
 
 #include<iostream>
-
 #include<mutex>
 
 #include "visual_features_extractor/Frame.h"
 #include "ros/ros.h"
+#include <tf/tf.h>
 
 using namespace std;
 
 namespace ORB_SLAM2
 {
 
-Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
-                   MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase* pKFDB,
+Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FramePublisher *pFramePublisher,
+                   MapPublisher *pMapPublisher, Map *pMap, KeyFrameDatabase* pKFDB,
                    const sensor_msgs::CameraInfoConstPtr & cam_info, const int sensor) :
     mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false),
     mpORBVocabulary(pVoc), mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer*>(NULL)),
-    mpSystem(pSys), mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap),
+    mpSystem(pSys), mpFramePublisher(pFramePublisher), mpMapPublisher(pMapPublisher), mpMap(pMap),
     mnLastRelocFrameId(0)
 {
     ros::NodeHandle nh("~");
@@ -102,6 +101,10 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     cout << "- Minimum Fast Threshold: " << fMinThFAST << endl;
 
     state_pub = nh.advertise<orb_slam2::TrackingState>("tracking_state", 1);
+
+    tf::Transform tfT;
+    tfT.setIdentity();
+    mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "/ORB_SLAM/World", "/ORB_SLAM/Camera"));
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -114,28 +117,30 @@ void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
     mpLoopClosing=pLoopClosing;
 }
 
-void Tracking::SetViewer(Viewer *pViewer)
-{
-    mpViewer=pViewer;
-}
+//void Tracking::SetViewer(Viewer *pViewer)
+//{
+//    mpViewer=pViewer;
+//}
 
 cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const visual_features_extractor::Frame & frame)
 {
-    mImGray = im;
-
-    if(mImGray.channels()==3)
+    if (im.channels()==1)
+    {
+        im.copyTo(mImGray);
+    }
+    else if(im.channels()==3)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
+            cvtColor(im,mImGray,CV_RGB2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+            cvtColor(im,mImGray,CV_BGR2GRAY);
     }
     else if(mImGray.channels()==4)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
+            cvtColor(im,mImGray,CV_RGBA2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+            cvtColor(im,mImGray,CV_BGRA2GRAY);
     }
 
     if(mState==NOT_INITIALIZED || mState==NO_IMAGES_YET)
@@ -145,6 +150,22 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
 
     Track();
 
+    mpFramePublisher->Refresh();
+    mpMapPublisher->Refresh();
+
+    if(!mCurrentFrame.mTcw.empty())
+    {
+        cv::Mat Rwc = mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3).t();
+        cv::Mat twc = -Rwc*mCurrentFrame.mTcw.rowRange(0,3).col(3);
+        tf::Matrix3x3 M(Rwc.at<float>(0,0),Rwc.at<float>(0,1),Rwc.at<float>(0,2),
+                        Rwc.at<float>(1,0),Rwc.at<float>(1,1),Rwc.at<float>(1,2),
+                        Rwc.at<float>(2,0),Rwc.at<float>(2,1),Rwc.at<float>(2,2));
+        tf::Vector3 V(twc.at<float>(0), twc.at<float>(1), twc.at<float>(2));
+
+        tf::Transform tfTcw(M,V);
+
+        mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+    }
     orb_slam2::TrackingState msg;
     msg.state = mState;
     msg.header.stamp = frame.header.stamp;
@@ -169,7 +190,7 @@ void Tracking::Track()
     {
         MonocularInitialization();
 
-        mpFrameDrawer->Update(this);
+        mpFramePublisher->Update(this);
 
         if(mState!=OK)
             return;
@@ -301,7 +322,7 @@ void Tracking::Track()
             mState=LOST;
 
         // Update drawer
-        mpFrameDrawer->Update(this);
+        mpFramePublisher->Update(this);
 
         // If tracking were good, check if we insert a keyframe
         if(bOK)
@@ -317,7 +338,7 @@ void Tracking::Track()
             else
                 mVelocity = cv::Mat();
 
-            mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.mTcw);
+            mpMapPublisher->SetCurrentCameraPose(mCurrentFrame.mTcw);
 
             // Clean temporal point matches
             for(int i=0; i<mCurrentFrame.N; i++)
@@ -559,7 +580,7 @@ void Tracking::CreateInitialMapMonocular()
 
     mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
 
-    mpMapDrawer->SetCurrentCameraPose(pKFcur->GetPose());
+//    mpMapDrawer->SetCurrentCameraPose(pKFcur->GetPose());
 
     mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
@@ -1258,11 +1279,11 @@ bool Tracking::Relocalization()
 
 void Tracking::Reset()
 {
-    mpViewer->RequestStop();
+//    mpViewer->RequestStop();
 
     cout << "System Reseting" << endl;
-    while(!mpViewer->isStopped())
-        usleep(3000);
+//    while(!mpViewer->isStopped())
+//        usleep(3000);
 
     // Reset Local Mapping
     cout << "Reseting Local Mapper...";
@@ -1297,7 +1318,7 @@ void Tracking::Reset()
     mlFrameTimes.clear();
     mlbLost.clear();
 
-    mpViewer->Release();
+//    mpViewer->Release();
 }
 
 //void Tracking::ChangeCalibration(const string &strSettingPath)

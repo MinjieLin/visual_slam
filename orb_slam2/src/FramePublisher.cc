@@ -1,52 +1,73 @@
 /**
-* This file is part of ORB-SLAM2.
+* This file is part of ORB-SLAM.
 *
-* Copyright (C) 2014-2016 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
-* For more information see <https://github.com/raulmur/ORB_SLAM2>
+* Copyright (C) 2014 Raúl Mur-Artal <raulmur at unizar dot es> (University of Zaragoza)
+* For more information see <http://webdiis.unizar.es/~raulmur/orbslam/>
 *
-* ORB-SLAM2 is free software: you can redistribute it and/or modify
+* ORB-SLAM is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
-* ORB-SLAM2 is distributed in the hope that it will be useful,
+* ORB-SLAM is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 * GNU General Public License for more details.
 *
 * You should have received a copy of the GNU General Public License
-* along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
+* along with ORB-SLAM. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "FrameDrawer.h"
+#include "FramePublisher.h"
 #include "Tracking.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include<mutex>
+#include<boost/thread.hpp>
+#include<ros/ros.h>
+#include <cv_bridge/cv_bridge.h>
 
 namespace ORB_SLAM2
 {
 
-FrameDrawer::FrameDrawer(Map* pMap):mpMap(pMap)
+FramePublisher::FramePublisher()
 {
     mState=Tracking::SYSTEM_NOT_READY;
     mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
+    mbUpdated = true;
+
+    mImagePub = mNH.advertise<sensor_msgs::Image>("frame",10,true);
+
+    PublishFrame();
 }
 
-cv::Mat FrameDrawer::DrawFrame()
+void FramePublisher::SetMap(Map *pMap)
+{
+    mpMap = pMap;
+}
+
+void FramePublisher::Refresh()
+{
+    if(mbUpdated)
+    {
+        PublishFrame();
+        mbUpdated = false;
+    }
+}
+
+cv::Mat FramePublisher::DrawFrame()
 {
     cv::Mat im;
     vector<cv::KeyPoint> vIniKeys; // Initialization: KeyPoints in reference frame
     vector<int> vMatches; // Initialization: correspondeces with reference keypoints
     vector<cv::KeyPoint> vCurrentKeys; // KeyPoints in current frame
-    vector<bool> vbVO, vbMap; // Tracked MapPoints in current frame
+    vector<MapPoint*> vMatchedMapPoints; // Tracked MapPoints in current frame
     int state; // Tracking state
 
-    //Copy variables within scoped mutex
+    //Copy variable to be used within scoped mutex
     {
-        unique_lock<mutex> lock(mMutex);
+        boost::mutex::scoped_lock lock(mMutex);
         state=mState;
         if(mState==Tracking::SYSTEM_NOT_READY)
             mState=Tracking::NO_IMAGES_YET;
@@ -54,7 +75,7 @@ cv::Mat FrameDrawer::DrawFrame()
         mIm.copyTo(im);
 
         if(mState==Tracking::NOT_INITIALIZED)
-        {
+        {            
             vCurrentKeys = mvCurrentKeys;
             vIniKeys = mvIniKeys;
             vMatches = mvIniMatches;
@@ -62,16 +83,15 @@ cv::Mat FrameDrawer::DrawFrame()
         else if(mState==Tracking::OK)
         {
             vCurrentKeys = mvCurrentKeys;
-            vbVO = mvbVO;
-            vbMap = mvbMap;
+            vMatchedMapPoints = mvpMatchedMapPoints;
         }
         else if(mState==Tracking::LOST)
         {
             vCurrentKeys = mvCurrentKeys;
         }
-    } // destroy scoped mutex -> release mutex
+    } // destroy scoped mutex -> release
 
-    if(im.channels()<3) //this should be always true
+    if(im.channels()<3)
         cvtColor(im,im,CV_GRAY2BGR);
 
     //Draw
@@ -89,33 +109,25 @@ cv::Mat FrameDrawer::DrawFrame()
     else if(state==Tracking::OK) //TRACKING
     {
         mnTracked=0;
-        mnTrackedVO=0;
         const float r = 5;
-        for(int i=0;i<N;i++)
+        for(unsigned int i=0;i<vMatchedMapPoints.size();i++)
         {
-            if(vbVO[i] || vbMap[i])
+            if(vMatchedMapPoints[i] || mvbOutliers[i])
             {
                 cv::Point2f pt1,pt2;
                 pt1.x=vCurrentKeys[i].pt.x-r;
                 pt1.y=vCurrentKeys[i].pt.y-r;
                 pt2.x=vCurrentKeys[i].pt.x+r;
                 pt2.y=vCurrentKeys[i].pt.y+r;
-
-                // This is a match to a MapPoint in the map
-                if(vbMap[i])
+                if(!mvbOutliers[i])
                 {
                     cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
                     cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(0,255,0),-1);
                     mnTracked++;
                 }
-                else // This is match to a "visual odometry" MapPoint created in the last frame
-                {
-                    cv::rectangle(im,pt1,pt2,cv::Scalar(255,0,0));
-                    cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(255,0,0),-1);
-                    mnTrackedVO++;
-                }
             }
         }
+
     }
 
     cv::Mat imWithInfo;
@@ -124,25 +136,31 @@ cv::Mat FrameDrawer::DrawFrame()
     return imWithInfo;
 }
 
+void FramePublisher::PublishFrame()
+{
+    cv::Mat im = DrawFrame();
 
-void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
+    cv_bridge::CvImage rosImage;
+    rosImage.image = im.clone();
+    rosImage.header.stamp = ros::Time::now();
+    rosImage.encoding = "bgr8";
+
+    mImagePub.publish(rosImage.toImageMsg());
+}
+
+void FramePublisher::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 {
     stringstream s;
     if(nState==Tracking::NO_IMAGES_YET)
-        s << " WAITING FOR IMAGES";
+        s << "WAITING FOR IMAGES. (Topic: /camera/image_raw)";
     else if(nState==Tracking::NOT_INITIALIZED)
         s << " TRYING TO INITIALIZE ";
     else if(nState==Tracking::OK)
     {
-        if(!mbOnlyTracking)
-            s << "SLAM MODE |  ";
-        else
-            s << "LOCALIZATION | ";
+        s << " TRACKING ";
         int nKFs = mpMap->KeyFramesInMap();
         int nMPs = mpMap->MapPointsInMap();
-        s << "KFs: " << nKFs << ", MPs: " << nMPs << ", Matches: " << mnTracked;
-        if(mnTrackedVO>0)
-            s << ", + VO matches: " << mnTrackedVO;
+        s << " - KFs: " << nKFs << " , MPs: " << nMPs << " , Tracked: " << mnTracked;
     }
     else if(nState==Tracking::LOST)
     {
@@ -163,40 +181,22 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 
 }
 
-void FrameDrawer::Update(Tracking *pTracker)
+void FramePublisher::Update(Tracking *pTracker)
 {
-    unique_lock<mutex> lock(mMutex);
+    boost::mutex::scoped_lock lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
-    N = mvCurrentKeys.size();
-    mvbVO = vector<bool>(N,false);
-    mvbMap = vector<bool>(N,false);
-    mbOnlyTracking = pTracker->mbOnlyTracking;
-
+    mvpMatchedMapPoints=pTracker->mCurrentFrame.mvpMapPoints;
+    mvbOutliers = pTracker->mCurrentFrame.mvbOutlier;
 
     if(pTracker->mLastProcessedState==Tracking::NOT_INITIALIZED)
     {
         mvIniKeys=pTracker->mInitialFrame.mvKeys;
         mvIniMatches=pTracker->mvIniMatches;
     }
-    else if(pTracker->mLastProcessedState==Tracking::OK)
-    {
-        for(int i=0;i<N;i++)
-        {
-            MapPoint* pMP = pTracker->mCurrentFrame.mvpMapPoints[i];
-            if(pMP)
-            {
-                if(!pTracker->mCurrentFrame.mvbOutlier[i])
-                {
-                    if(pMP->Observations()>0)
-                        mvbMap[i]=true;
-                    else
-                        mvbVO[i]=true;
-                }
-            }
-        }
-    }
     mState=static_cast<int>(pTracker->mLastProcessedState);
+
+    mbUpdated=true;
 }
 
 } //namespace ORB_SLAM

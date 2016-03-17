@@ -25,8 +25,7 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
 
-#include"Viewer.h"
-#include"FrameDrawer.h"
+#include"FramePublisher.h"
 #include"Map.h"
 #include"LocalMapping.h"
 #include"LoopClosing.h"
@@ -35,7 +34,7 @@
 #include"KeyFrameDatabase.h"
 #include"ORBextractor.h"
 #include "Initializer.h"
-#include "MapDrawer.h"
+#include "MapPublisher.h"
 #include "System.h"
 
 #include "visual_features_extractor/Frame.h"
@@ -45,12 +44,13 @@
 #include "ros/ros.h"
 #include "orb_slam2/TrackingState.h"
 #include "sensor_msgs/CameraInfo.h"
+#include<tf/transform_broadcaster.h>
 
 namespace ORB_SLAM2
 {
 
-class Viewer;
-class FrameDrawer;
+//class Viewer;
+class FramePublisher;
 class Map;
 class LocalMapping;
 class LoopClosing;
@@ -60,7 +60,7 @@ class Tracking
 {  
 
 public:
-    Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer,
+    Tracking(System* pSys, ORBVocabulary* pVoc, FramePublisher* pFramePublisher, MapPublisher* pMapPublisher,
              Map* pMap, KeyFrameDatabase* pKFDB, const sensor_msgs::CameraInfoConstPtr & cam_info,
              const int sensor);
 
@@ -69,7 +69,7 @@ public:
 
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
-    void SetViewer(Viewer* pViewer);
+//    void SetViewer(Viewer* pViewer);
 
 
     // TODO: implement this with dynamic_conf or with new camera_info
@@ -181,9 +181,11 @@ protected:
     System* mpSystem;
     
     //Drawers
-    Viewer* mpViewer;
-    FrameDrawer* mpFrameDrawer;
-    MapDrawer* mpMapDrawer;
+//    Viewer* mpViewer;
+//    FrameDrawer* mpFrameDrawer;
+//    MapDrawer* mpMapDrawer;
+    FramePublisher* mpFramePublisher;
+    MapPublisher* mpMapPublisher;
 
     //Map
     Map* mpMap;
@@ -223,6 +225,8 @@ protected:
     list<MapPoint*> mlpTemporalPoints;
 
     ros::Publisher state_pub;
+    // Transfor broadcaster (for visualization in rviz)
+    tf::TransformBroadcaster mTfBr;
 };
 
 } //namespace ORB_SLAM

@@ -1,23 +1,25 @@
 <launch>
     <arg name="bag"/>
-<!--
-    <node pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
+    <machine name="pinky" address="pinky" user="biorob"/>
+    <machine name="odroid" address="odroid" user="odroid"/>
+
+<!--    <node machine="pinky" pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
       <param name="publish_image_" value="true" />
       <remap from="image" to="/usb_cam/image_raw"/>
       <remap from="camera_info" to="/usb_cam/camera_info"/>
     </node> 
 -->
-    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
+    <node machine="odroid" pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
       <remap from="~image" to="/usb_cam/image_raw"/>
       <remap from="~camera_info" to="/usb_cam/camera_info"/>
       <remap from="~features" to="/features"/>
       <param name="debug_view" value="true"/>
-      <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt.full"/>
+      <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
       <param name="settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
-      <param name="fps" value="30"/>
+      <param name="fps" value="15"/>
     </node>
     
-     <node pkg="rosbag" type="play" name="player" output="screen" args="--clock --loop $(arg bag)"/>
+    <node machine="pinky" pkg="rosbag" type="play" name="player" output="screen" args="--clock --loop $(arg bag)"/>
     
   
 <!--
