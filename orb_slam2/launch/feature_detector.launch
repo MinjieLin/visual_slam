@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="usb_cam" type="usb_cam_node" name="cam" output="screen">
+    <!--node pkg="usb_cam" type="usb_cam_node" name="cam" output="screen">
       <param name="video_device" value="/dev/video0" />
       <param name="autoexposure " value="false" />
       <param name="exposure"  value="5000" />
@@ -9,18 +9,18 @@
       <param name="framerate" value="30" />
       <param name="pixel_format" value="yuyv" />
       <param name="io_method" value="mmap" />
-    </node>
+    </node-->
 
     <node pkg="image_proc" type="image_proc" name="image_proc">
-      <remap from="image_raw" to="/cam/image_raw"/>
-      <remap from="camera_info" to="/cam/camera_info"/>
+      <remap from="image_raw" to="/usb_cam/image_raw"/>
+      <remap from="camera_info" to="/usb_cam/camera_info"/>
     </node> 
 
 
     <node pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
       <param name="publish_image_" value="true" />
       <remap from="image" to="/image_rect"/>
-      <remap from="camera_info" to="/cam/camera_info"/>
+      <remap from="camera_info" to="/usb_cam/camera_info"/>
     </node> 
     
 </launch>
