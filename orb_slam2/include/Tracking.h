@@ -134,7 +134,10 @@ protected:
     void CheckReplacedInLastFrame();
     bool TrackReferenceKeyFrame();
     void UpdateLastFrame();
+
     bool TrackWithMotionModel();
+    void twmmT1(Frame&,int&);  // Thread run by TrackWithMotionModel();
+    void twmmT2(Frame&,int&);  // Thread run by TrackWithMotionModel();
 
     bool Relocalization();
 

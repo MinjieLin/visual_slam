@@ -40,7 +40,6 @@
 #include "visual_features_extractor/Frame.h"
 #include "ros/ros.h"
 
-
 using namespace std;
 
 namespace ORB_SLAM2
@@ -394,7 +393,6 @@ void Tracking::Track()
 
 void Tracking::MonocularInitialization()
 {
-
     if(!mpInitializer)
     {
         // Set Reference Frame
@@ -597,7 +595,6 @@ bool Tracking::TrackReferenceKeyFrame()
     vector<MapPoint*> vpMapPointMatches;
 
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
-
     if(nmatches<15)
         return false;
 
@@ -637,6 +634,38 @@ void Tracking::UpdateLastFrame()
     cv::Mat Tlr = mlRelativeFramePoses.back();
 
     mLastFrame.SetPose(Tlr*pRef->GetPose());
+}
+
+void Tracking::twmmT1(Frame& f1, int& nmatches1)
+{
+    ROS_INFO("T1 Start");
+    ORBmatcher matcher(0.9,true);
+
+    // Project points seen in previous frame
+    int th;
+    if(mSensor!=System::STEREO)
+        th=15;
+    else
+        th=7;
+
+    nmatches1 = matcher.SearchByProjection(f1,mLastFrame,th,mSensor==System::MONOCULAR);
+    ROS_INFO("T1 Done");
+}
+
+void Tracking::twmmT2(Frame& f2, int& nmatches2)
+{
+    ROS_INFO("T2 Start");
+    ORBmatcher matcher(0.9,true);
+
+    // Project points seen in previous frame
+    int th;
+    if(mSensor!=System::STEREO)
+        th=15;
+    else
+        th=7;
+
+    nmatches2 = matcher.SearchByProjection(f2,mLastFrame,2*th,mSensor==System::MONOCULAR);
+    ROS_INFO("T2 Done");
 }
 
 bool Tracking::TrackWithMotionModel()
@@ -691,7 +720,7 @@ bool Tracking::TrackWithMotionModel()
             else if(mCurrentFrame.mvpMapPoints[i]->Observations()>0)
                 nmatchesMap++;
         }
-    }    
+    }
 
     if(mbOnlyTracking)
     {

@@ -13,8 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native -fopenmp")
 
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
@@ -106,4 +106,3 @@ add_executable(ros_mono
 	src/ros_mono.cc
 )
 target_link_libraries(ros_mono ${PROJECT_NAME})
-

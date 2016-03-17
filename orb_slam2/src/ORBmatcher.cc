@@ -44,10 +44,12 @@ ORBmatcher::ORBmatcher(float nnratio, bool checkOri): mfNNratio(nnratio), mbChec
 
 int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoints, const float th)
 {
+    //time_t start = clock();
     int nmatches=0;
 
     const bool bFactor = th!=1.0;
 
+    #pragma omp parallel for
     for(size_t iMP=0; iMP<vpMapPoints.size(); iMP++)
     {
         MapPoint* pMP = vpMapPoints[iMP];
@@ -121,10 +123,11 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
                 continue;
 
             F.mvpMapPoints[bestIdx]=pMP;
+            #pragma omp atomic
             nmatches++;
         }
     }
-
+    //ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
     return nmatches;
 }
 
@@ -309,7 +312,10 @@ int ORBmatcher::SearchByProjection(KeyFrame* pKF, cv::Mat Scw, const vector<MapP
     int nmatches=0;
 
     // For each Candidate MapPoint Project and Match
-    for(int iMP=0, iendMP=vpPoints.size(); iMP<iendMP; iMP++)
+    int iendMP=vpPoints.size();
+
+//    # pragma omp parallel for
+    for(int iMP=0; iMP<iendMP; iMP++)
     {
         MapPoint* pMP = vpPoints[iMP];
 
@@ -402,8 +408,9 @@ int ORBmatcher::SearchByProjection(KeyFrame* pKF, cv::Mat Scw, const vector<MapP
     return nmatches;
 }
 
-int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f> &vbPrevMatched, vector<int> &vnMatches12, int windowSize)
+int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector<cv::Point2f> &vbPrevMatched, vector<int> &vnMatches12, const int windowSize)
 {
+    //time_t start = clock();
     int nmatches=0;
     vnMatches12 = vector<int>(F1.mvKeysUn.size(),-1);
 
@@ -414,8 +421,10 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
 
     vector<int> vMatchedDistance(F2.mvKeysUn.size(),INT_MAX);
     vector<int> vnMatches21(F2.mvKeysUn.size(),-1);
+    size_t iend1=F1.mvKeysUn.size();
 
-    for(size_t i1=0, iend1=F1.mvKeysUn.size(); i1<iend1; i1++)
+    #pragma omp parallel for
+    for(size_t i1=0; i1<iend1; i1++)    // Generally runs well over 1000 iterations
     {
         cv::KeyPoint kp1 = F1.mvKeysUn[i1];
         int level1 = kp1.octave;
@@ -462,13 +471,19 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
             {
                 if(vnMatches21[bestIdx2]>=0)
                 {
-                    vnMatches12[vnMatches21[bestIdx2]]=-1;
-                    nmatches--;
+                    #pragma omp critical(C1)
+                    {
+                        vnMatches12[vnMatches21[bestIdx2]]=-1;
+                        nmatches--;
+                    }
                 }
-                vnMatches12[i1]=bestIdx2;
+                #pragma omp critical(C1)
+                {
+                    vnMatches12[i1]=bestIdx2;
+                    nmatches++;
+                }
                 vnMatches21[bestIdx2]=i1;
                 vMatchedDistance[bestIdx2]=bestDist;
-                nmatches++;
 
                 if(mbCheckOrientation)
                 {
@@ -483,8 +498,8 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
                 }
             }
         }
-
     }
+    //ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
 
     if(mbCheckOrientation)
     {
@@ -1327,6 +1342,7 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
 
 int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono)
 {
+//    ROS_INFO("calling 2");
     int nmatches = 0;
 
     // Rotation Histogram (to check rotation consistency)
@@ -1348,6 +1364,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     const bool bForward = tlc.at<float>(2)>CurrentFrame.mb && !bMono;
     const bool bBackward = -tlc.at<float>(2)>CurrentFrame.mb && !bMono;
 
+    //#pragma omp parallel for
     for(int i=0; i<LastFrame.N; i++)
     {
         MapPoint* pMP = LastFrame.mvpMapPoints[i];
@@ -1484,8 +1501,10 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
     const float factor = 1.0f/HISTO_LENGTH;
 
     const vector<MapPoint*> vpMPs = pKF->GetMapPointMatches();
+    size_t iend=vpMPs.size();
 
-    for(size_t i=0, iend=vpMPs.size(); i<iend; i++)
+    #pragma omp parallel for
+    for(size_t i=0; i<iend; i++)
     {
         MapPoint* pMP = vpMPs[i];
 
@@ -1555,6 +1574,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
                 if(bestDist<=ORBdist)
                 {
                     CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
+                    #pragma omp atomic
                     nmatches++;
 
                     if(mbCheckOrientation)

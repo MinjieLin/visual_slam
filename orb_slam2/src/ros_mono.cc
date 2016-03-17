@@ -49,7 +49,7 @@ message_filters::Subscriber<visual_features_extractor::Frame >  * frame_filter_s
 message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame > * msg_sync;
 ros::Subscriber cam_info_sub;
 
-string vocab_path;;
+string vocab_path;
 
 void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
                           const visual_features_extractor::FrameConstPtr & frame)
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     if (!nh.getParam("vocabulary_path",vocab_path)){
-        ROS_ERROR("vocabulary_path parameter was not specified");
+        ROS_ERROR("vocabulary_path parameter was not specified.");
         ros::shutdown();
         return 1;
     }
