@@ -122,9 +122,11 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
             if(bestLevel==bestLevel2 && bestDist>mfNNratio*bestDist2)
                 continue;
 
-            F.mvpMapPoints[bestIdx]=pMP;
-            #pragma omp atomic
-            nmatches++;
+            #pragma omp critical
+            {
+                F.mvpMapPoints[bestIdx]=pMP;
+                nmatches++;
+            }
         }
     }
     //ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
@@ -481,9 +483,9 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
                 {
                     vnMatches12[i1]=bestIdx2;
                     nmatches++;
+                    vnMatches21[bestIdx2]=i1;
+                    vMatchedDistance[bestIdx2]=bestDist;
                 }
-                vnMatches21[bestIdx2]=i1;
-                vMatchedDistance[bestIdx2]=bestDist;
 
                 if(mbCheckOrientation)
                 {
@@ -494,7 +496,10 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
                     if(bin==HISTO_LENGTH)
                         bin=0;
                     assert(bin>=0 && bin<HISTO_LENGTH);
-                    rotHist[bin].push_back(i1);
+                    #pragma omp critical(C2)
+                    {
+                        rotHist[bin].push_back(i1);
+                    }
                 }
             }
         }
@@ -1342,7 +1347,6 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
 
 int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono)
 {
-//    ROS_INFO("calling 2");
     int nmatches = 0;
 
     // Rotation Histogram (to check rotation consistency)
@@ -1364,7 +1368,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     const bool bForward = tlc.at<float>(2)>CurrentFrame.mb && !bMono;
     const bool bBackward = -tlc.at<float>(2)>CurrentFrame.mb && !bMono;
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for(int i=0; i<LastFrame.N; i++)
     {
         MapPoint* pMP = LastFrame.mvpMapPoints[i];
@@ -1442,9 +1446,11 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
                 if(bestDist<=TH_HIGH)
                 {
-                    CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
-                    nmatches++;
-
+                    #pragma omp critical(C1)
+                    {
+                        CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
+                        nmatches++;
+                    }
                     if(mbCheckOrientation)
                     {
                         float rot = LastFrame.mvKeysUn[i].angle-CurrentFrame.mvKeysUn[bestIdx2].angle;
@@ -1454,7 +1460,10 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                         if(bin==HISTO_LENGTH)
                             bin=0;
                         assert(bin>=0 && bin<HISTO_LENGTH);
-                        rotHist[bin].push_back(bestIdx2);
+                        #pragma omp critical(C1)
+                        {
+                           rotHist[bin].push_back(bestIdx2);
+                        }
                     }
                 }
             }
@@ -1486,7 +1495,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     return nmatches;
 }
 
-int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set<MapPoint*> &sAlreadyFound, const float th , const int ORBdist)
+int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const set<MapPoint*>& sAlreadyFound, const float th , const int ORBdist)
 {
     int nmatches = 0;
 
@@ -1573,9 +1582,11 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
 
                 if(bestDist<=ORBdist)
                 {
-                    CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
-                    #pragma omp atomic
-                    nmatches++;
+                    #pragma omp critical(C1)
+                    {
+                        CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
+                        nmatches++;
+                    }
 
                     if(mbCheckOrientation)
                     {
@@ -1586,10 +1597,12 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame *pKF, const set
                         if(bin==HISTO_LENGTH)
                             bin=0;
                         assert(bin>=0 && bin<HISTO_LENGTH);
-                        rotHist[bin].push_back(bestIdx2);
+                        #pragma omp critical(C2)
+                        {
+                            rotHist[bin].push_back(bestIdx2);
+                        }
                     }
                 }
-
             }
         }
     }
