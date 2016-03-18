@@ -1333,7 +1333,6 @@ int TemplatedVocabulary<TDescriptor,F>::stopWords(double minWeight)
 }
 
 // --------------------------------------------------------------------------
-
 template<class TDescriptor, class F>
 bool TemplatedVocabulary<TDescriptor,F>::loadFromTextFile(const std::string &filename)
 {
@@ -1436,7 +1435,6 @@ bool TemplatedVocabulary<TDescriptor,F>::loadFromTextFile(const std::string &fil
     }
 
     return true;
-
 }
 
 // --------------------------------------------------------------------------

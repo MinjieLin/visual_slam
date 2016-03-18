@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <fstream>
 #include <chrono>
-
+#include <ros/package.h>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 
@@ -111,9 +111,10 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh("~");
 
-    if (!nh.getParam("vocabulary_path",vocab_path)){
-        ROS_INFO("Vocabulary Path Not Provided. Using Default.");
-        vocab_path = "/home/muhaimen/ROS/src/visual_slam/orb_slam2/Vocabulary/ORBvoc.txt";
+    if (!nh.getParam("vocabulary_path",vocab_path))
+    {
+        vocab_path = ros::package::getPath("orb_slam2") + "/Vocabulary/ORBvoc.txt";
+        ROS_INFO("Vocabulary Path Not Provided. Using %s", vocab_path.c_str());
     }
 
     cam_info_sub = nh.subscribe("/usb_cam/camera_info", 1, &grab_cam_info_and_setup);
