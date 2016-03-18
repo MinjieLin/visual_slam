@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Image1
       Splitter Ratio: 0.5
     Tree Height: 540
   - Class: rviz/Selection
@@ -30,39 +31,32 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    - Alpha: 0.5
-      Cell Size: 1
-      Class: rviz/Grid
-      Color: 160; 160; 164
-      Enabled: true
-      Line Style:
-        Line Width: 0.03
-        Value: Lines
-      Name: Grid
-      Normal Cell Count: 0
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Plane: XY
-      Plane Cell Count: 10
-      Reference Frame: <Fixed Frame>
-      Value: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /usb_cam/rect/image_rect
+      Image Topic: /frame
       Max Value: 1
       Median window: 5
       Min Value: 0
       Name: Image
       Normalize Range: true
       Queue Size: 2
-      Transport Hint: compressed
+      Transport Hint: raw
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /ORB_SLAM/Map
+      Name: Marker
+      Namespaces:
+        Camera: true
+        Graph: true
+        KeyFrames: true
+        MapPoints: true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
-    Fixed Frame: map
+    Background Color: 255; 255; 255
+    Fixed Frame: ORB_SLAM/World
     Frame Rate: 30
   Name: root
   Tools:
@@ -83,22 +77,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10
+      Distance: 2.82842
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 0.493703
+        Y: -0.701953
+        Z: -0.128245
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.785398
+      Pitch: -0.189796
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.785398
+      Yaw: 4.61857
     Saved: ~
 Window Geometry:
   Displays:
@@ -118,5 +112,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 927
-  X: 982
+  X: 2892
   Y: 14
