@@ -86,9 +86,14 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
         {
             const size_t idx = *vit;
 
-            if(F.mvpMapPoints[idx])
-                if(F.mvpMapPoints[idx]->Observations()>0)
-                    continue;
+            bool cont = false;
+            #pragma omp critical(C1)
+            {
+                if(F.mvpMapPoints[idx])
+                    if(F.mvpMapPoints[idx]->Observations()>0)
+                        cont = true;
+            }
+            if(cont) continue;
 
             if(F.mvuRight[idx]>0)
             {
@@ -122,10 +127,11 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
             if(bestLevel==bestLevel2 && bestDist>mfNNratio*bestDist2)
                 continue;
 
-            #pragma omp critical
+            #pragma omp critical(C1)
             {
                 F.mvpMapPoints[bestIdx]=pMP;
                 nmatches++;
+                #pragma omp flush
             }
         }
     }
@@ -452,8 +458,16 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
 
             int dist = DescriptorDistance(d1,d2);
 
-            if(vMatchedDistance[i2]<=dist)
-                continue;
+            bool cont = false;
+
+            #pragma omp critical(C1)
+            {
+                #pragma omp flush
+                if(vMatchedDistance[i2]<=dist)
+                    cont = true;
+            }
+
+            if(cont) continue;
 
             if(dist<bestDist)
             {
@@ -471,12 +485,14 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
         {
             if(bestDist<(float)bestDist2*mfNNratio)
             {
-                if(vnMatches21[bestIdx2]>=0)
+                #pragma omp critical(C1)
                 {
-                    #pragma omp critical(C1)
+                    #pragma omp flush
+                    if(vnMatches21[bestIdx2]>=0)
                     {
                         vnMatches12[vnMatches21[bestIdx2]]=-1;
                         nmatches--;
+                        #pragma omp flush
                     }
                 }
                 #pragma omp critical(C1)
@@ -485,6 +501,7 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
                     nmatches++;
                     vnMatches21[bestIdx2]=i1;
                     vMatchedDistance[bestIdx2]=bestDist;
+                    #pragma omp flush
                 }
 
                 if(mbCheckOrientation)
@@ -499,6 +516,7 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
                     #pragma omp critical(C2)
                     {
                         rotHist[bin].push_back(i1);
+                        #pragma omp flush
                     }
                 }
             }
@@ -1368,7 +1386,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
     const bool bForward = tlc.at<float>(2)>CurrentFrame.mb && !bMono;
     const bool bBackward = -tlc.at<float>(2)>CurrentFrame.mb && !bMono;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i=0; i<LastFrame.N; i++)
     {
         MapPoint* pMP = LastFrame.mvpMapPoints[i];
@@ -1421,9 +1439,16 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 for(vector<size_t>::const_iterator vit=vIndices2.begin(), vend=vIndices2.end(); vit!=vend; vit++)
                 {
                     const size_t i2 = *vit;
-                    if(CurrentFrame.mvpMapPoints[i2])
-                        if(CurrentFrame.mvpMapPoints[i2]->Observations()>0)
-                            continue;
+                    bool cont = false;
+                    #pragma omp critical(C1)
+                    {
+                        #pragma omp flush
+                        if(CurrentFrame.mvpMapPoints[i2])
+                            if(CurrentFrame.mvpMapPoints[i2]->Observations()>0)
+
+                                cont = true;
+                    }
+                    if(cont)continue;
 
                     if(CurrentFrame.mvuRight[i2]>0)
                     {
@@ -1450,6 +1475,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                     {
                         CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
                         nmatches++;
+                        #pragma omp flush
                     }
                     if(mbCheckOrientation)
                     {
@@ -1460,9 +1486,11 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                         if(bin==HISTO_LENGTH)
                             bin=0;
                         assert(bin>=0 && bin<HISTO_LENGTH);
-                        #pragma omp critical(C1)
+
+                        #pragma omp critical(C2)
                         {
                            rotHist[bin].push_back(bestIdx2);
+                           #pragma omp flush
                         }
                     }
                 }
@@ -1512,7 +1540,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const set
     const vector<MapPoint*> vpMPs = pKF->GetMapPointMatches();
     size_t iend=vpMPs.size();
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(size_t i=0; i<iend; i++)
     {
         MapPoint* pMP = vpMPs[i];
@@ -1566,8 +1594,14 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const set
                 for(vector<size_t>::const_iterator vit=vIndices2.begin(); vit!=vIndices2.end(); vit++)
                 {
                     const size_t i2 = *vit;
-                    if(CurrentFrame.mvpMapPoints[i2])
-                        continue;
+                    bool cont= false;
+                    #pragma omp critical(C1)
+                    {
+                        #pragma omp flush
+                        if(CurrentFrame.mvpMapPoints[i2])
+                            cont = true;
+                    }
+                    if(cont) continue;
 
                     const cv::Mat &d = CurrentFrame.mDescriptors.row(i2);
 
@@ -1586,6 +1620,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const set
                     {
                         CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
                         nmatches++;
+                        #pragma omp flush
                     }
 
                     if(mbCheckOrientation)
@@ -1600,6 +1635,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, KeyFrame* pKF, const set
                         #pragma omp critical(C2)
                         {
                             rotHist[bin].push_back(bestIdx2);
+                            #pragma omp flush
                         }
                     }
                 }

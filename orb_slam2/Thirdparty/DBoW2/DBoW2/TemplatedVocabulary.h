@@ -1380,7 +1380,7 @@ bool TemplatedVocabulary<TDescriptor,F>::loadFromTextFile(const std::string &fil
         snode_vector.push_back(s);
     int v_size = snode_vector.size();
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
 //    while(!f.eof())
     for(int i = 0; i < v_size; ++i)
     {
