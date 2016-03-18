@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure 
   visual_features_extractor
   message_generation
+  tf
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native -fopenmp")
@@ -73,19 +74,18 @@ add_library(${PROJECT_NAME} SHARED
 	src/LoopClosing.cc
 	src/ORBextractor.cc
 	src/ORBmatcher.cc
-	src/FrameDrawer.cc
 	src/Converter.cc
 	src/MapPoint.cc
 	src/KeyFrame.cc
 	src/Map.cc
-	src/MapDrawer.cc
 	src/Optimizer.cc
 	src/PnPsolver.cc
 	src/Frame.cc
 	src/KeyFrameDatabase.cc
 	src/Sim3Solver.cc
 	src/Initializer.cc
-	src/Viewer.cc
+        src/FramePublisher.cc
+        src/MapPublisher.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
