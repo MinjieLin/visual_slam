@@ -28,6 +28,7 @@
 #include"Converter.h"
 #include"Map.h"
 #include"Initializer.h"
+#include<algorithm>
 
 #include"Optimizer.h"
 #include"PnPsolver.h"
@@ -964,6 +965,7 @@ void Tracking::SearchLocalPoints()
         // If the camera has been relocalised recently, perform a coarser search
         if(mCurrentFrame.mnId<mnLastRelocFrameId+2)
             th=5;
+
         matcher.SearchByProjection(mCurrentFrame,mvpLocalMapPoints,th);
     }
 }
