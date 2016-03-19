@@ -22,6 +22,7 @@
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include <thread>
+#include <ctime>
 
 namespace ORB_SLAM2
 {
@@ -261,6 +262,7 @@ void Frame::ComputeBoW()
 
 void Frame::UndistortKeyPoints()
 {
+    //time_t start = clock();
     if(mDistCoef.at<float>(0)==0.0)
     {
         mvKeysUn=mvKeys;
@@ -289,6 +291,7 @@ void Frame::UndistortKeyPoints()
         kp.pt.y=mat.at<float>(i,1);
         mvKeysUn[i]=kp;
     }
+    //ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
 }
 
 void Frame::InitialComputations(const sensor_msgs::CameraInfoConstPtr & cam_info)
