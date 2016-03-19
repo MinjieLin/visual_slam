@@ -9,11 +9,12 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   dynamic_reconfigure 
   message_generation
+  message_filters
 )
 
 
 find_package(OpenCV 2.4.3 REQUIRED)
-find_package(Eigen3 3.1.0 REQUIRED)
+find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS signals thread)
 
 # generate the dynamic_reconfigure config file
@@ -45,4 +46,4 @@ include_directories(
 
 add_executable(feature_detector src/feature_detector.cpp)
 target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
+add_dependencies(feature_detector ${PROJECT_NAME}_generate_messages_cpp)

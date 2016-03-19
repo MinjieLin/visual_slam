@@ -73,7 +73,8 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const visual_featur
     if(mvKeys.empty())
         return;
 
-    UndistortKeyPoints();
+    // This is now done in the visual extractor node 
+    //UndistortKeyPoints();
 
     // Set no stereo information
     mvuRight = vector<float>(N,-1);
