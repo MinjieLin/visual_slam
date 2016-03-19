@@ -127,12 +127,18 @@ void MapPublisher::Refresh()
 //    if(mpMap->isMapUpdated())
 //    {
         vector<KeyFrame*> vKeyFrames = mpMap->GetAllKeyFrames();
-        vector<MapPoint*> vMapPoints = mpMap->GetAllMapPoints();
-        vector<MapPoint*> vRefMapPoints = mpMap->GetReferenceMapPoints();
-
-        PublishMapPoints(vMapPoints, vRefMapPoints);   
         PublishKeyFrames(vKeyFrames);
 
+        ros::NodeHandle nh("~");
+        bool debug_view;
+        nh.param("debug_view", debug_view, true);
+
+        if(debug_view)
+        {
+            vector<MapPoint*> vMapPoints = mpMap->GetAllMapPoints();
+            vector<MapPoint*> vRefMapPoints = mpMap->GetReferenceMapPoints();
+            PublishMapPoints(vMapPoints, vRefMapPoints);
+        }
 //        mpMap->ResetUpdated();
 //    }
 }

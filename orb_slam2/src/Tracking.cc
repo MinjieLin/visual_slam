@@ -151,7 +151,12 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
 
     Track();
 
-    mpFramePublisher->Refresh();
+    ros::NodeHandle nh("~");
+    bool debug_view;
+    nh.param("debug_view", debug_view, true);
+
+    if(debug_view)
+        mpFramePublisher->Refresh();
     mpMapPublisher->Refresh();
 
     if(!mCurrentFrame.mTcw.empty())
@@ -191,7 +196,12 @@ void Tracking::Track()
     {
         MonocularInitialization();
 
-        mpFramePublisher->Update(this);
+        ros::NodeHandle nh("~");
+        bool debug_view;
+        nh.param("debug_view", debug_view, true);
+
+        if(debug_view)
+            mpFramePublisher->Update(this);
 
         if(mState!=OK)
             return;
@@ -323,7 +333,12 @@ void Tracking::Track()
             mState=LOST;
 
         // Update drawer
-        mpFramePublisher->Update(this);
+        ros::NodeHandle nh("~");
+        bool debug_view;
+        nh.param("debug_view", debug_view, true);
+
+        if(debug_view)
+            mpFramePublisher->Update(this);
 
         // If tracking were good, check if we insert a keyframe
         if(bOK)
@@ -339,7 +354,8 @@ void Tracking::Track()
             else
                 mVelocity = cv::Mat();
 
-            mpMapPublisher->SetCurrentCameraPose(mCurrentFrame.mTcw);
+            if(debug_view)
+                mpMapPublisher->SetCurrentCameraPose(mCurrentFrame.mTcw);
 
             // Clean temporal point matches
             for(int i=0; i<mCurrentFrame.N; i++)

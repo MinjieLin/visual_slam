@@ -138,6 +138,7 @@ cv::Mat FramePublisher::DrawFrame()
 
 void FramePublisher::PublishFrame()
 {
+//    time_t start = clock();
     cv::Mat im = DrawFrame();
 
     cv_bridge::CvImage rosImage;
@@ -146,6 +147,7 @@ void FramePublisher::PublishFrame()
     rosImage.encoding = "bgr8";
 
     mImagePub.publish(rosImage.toImageMsg());
+//    ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
 }
 
 void FramePublisher::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
