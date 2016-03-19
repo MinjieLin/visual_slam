@@ -138,7 +138,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 
 	// Create msgs
 	visual_features_extractor::Frame f;
-	for (size_t i = 0; i < keypoints.size(); i++) {
+	for (size_t i = 0; i < undistorted_keypoints.size(); i++) {
 		visual_features_extractor::KeyPoint kp;
 		kp.x = undistorted_keypoints[i].pt.x;
 		kp.y = undistorted_keypoints[i].pt.y;
@@ -192,7 +192,8 @@ int main(int argc, char **argv) {
 			sensor_msgs::CameraInfo>(nh, "camera_info", 3);
 	msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
 			sensor_msgs::CameraInfo>(*image_filter_sub, *camera_info_filter_sub,
-			3);
+	 		3);
+  msg_sync->registerCallback(boost::bind(&proc_img, _1, _2));
 
 	ros::spin();
 	return 0;
