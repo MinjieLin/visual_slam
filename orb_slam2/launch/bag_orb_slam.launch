@@ -12,7 +12,7 @@
       <remap from="~camera_info" to="/usb_cam/camera_info"/>
       <remap from="~features" to="/features"/>
       <param name="debug_view" value="true"/>
-      <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt.full"/>
+      <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
       <param name="settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
       <param name="fps" value="30"/>
     </node>
