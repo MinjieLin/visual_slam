@@ -86,8 +86,7 @@ void undistort_keypoints(std::vector<cv::KeyPoint> &keypoints,
 
 	// Undistort points
 	mat = mat.reshape(2);
-	// TODO: they use return values for the distortion matrix, can we skip that?
-	cv::undistortPoints(mat, mat, K, DistCoef);
+	cv::undistortPoints(mat, mat, K, DistCoef, cv::Mat(), K);
 	mat = mat.reshape(1);
 
 	// Fill undistorted keypoint vector
@@ -187,14 +186,16 @@ int main(int argc, char **argv) {
 	ORB_detector_ = new cv::ORB(num_features_);
 
 	image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
-			"image", 3);
+			"image", 100);
 	camera_info_filter_sub = new message_filters::Subscriber<
-			sensor_msgs::CameraInfo>(nh, "camera_info", 3);
+			sensor_msgs::CameraInfo>(nh, "camera_info", 100);
 	msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
 			sensor_msgs::CameraInfo>(*image_filter_sub, *camera_info_filter_sub,
-	 		3);
+	 		100);
   msg_sync->registerCallback(boost::bind(&proc_img, _1, _2));
 
-	ros::spin();
+	//ros::spin();
+  ros::MultiThreadedSpinner spinner;
+  spinner.spin();
 	return 0;
 }
