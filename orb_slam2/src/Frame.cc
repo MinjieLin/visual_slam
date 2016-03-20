@@ -309,6 +309,7 @@ void Frame::InitialComputations(const sensor_msgs::CameraInfoConstPtr & cam_info
     K.at<float>(1,1) = fy;
     K.at<float>(0,2) = cx;
     K.at<float>(1,2) = cy;
+    K.at<float>(2,2) = 1;
     K.copyTo(mK);
 
     cv::Mat DistCoef(4,1,CV_32F);
