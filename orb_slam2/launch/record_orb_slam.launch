@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="usb_cam" type="usb_cam_node" name="cam" output="screen">
+    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam" output="screen">
       <param name="video_device" value="/dev/video0" />
       <param name="image_width" value="640" />
       <param name="image_height" value="480" />
@@ -9,28 +9,19 @@
       <param name="io_method" value="mmap" />
     </node>
 
-    <node pkg="image_proc" type="image_proc" name="image_proc">
-      <remap from="image_raw" to="/cam/image_raw"/>
-      <remap from="camera_info" to="/cam/camera_info"/>
-    </node> 
-
-
     <node pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
-      <param name="publish_image_" value="true" />
-      <remap from="image" to="/image_rect"/>
-      <remap from="camera_info" to="/cam/camera_info"/>
+      <param name="publish_image_" value="false" />
+      <remap from="image" to="/usb_cam/image_raw"/>
+      <remap from="camera_info" to="/usb_cam/camera_info"/>
+      <param name="~num_features" value="4000"/>
+      <param name="~subscribe_to_state" value="true"/>
     </node> 
 
     <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
-      <remap from="~image" to="/image_rect"/>
-      <remap from="~camera_info" to="/cam/camera_info"/>
-      <remap from="~features" to="/features"/>
-      <param name="debug_view" value="true"/>
-      <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
-      <param name="settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
+      <param name="~debug_view" value="false"/>
+      <param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
+      <param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
+      <param name="~fps" value="30"/>
     </node>
     
- 
-    <node pkg="rosbag" type="record" name="recorder" output="screen" args="/image_rect /cam/camera_info -o succesfullInit"/>
-  
 </launch>

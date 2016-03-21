@@ -1,0 +1,20 @@
+<launch>
+    <arg name="bag"/>
+    <machine name="pinky" address="pinky" user="biorob" env-loader="/home/biorob/env_loader.sh"/>
+    <machine name="odroid" address="odroid" user="odroid" env-loader="/home/odroid/env_loader.sh"/>
+
+    <node machine="pinky" pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
+      <remap from="camera_info" to="/usb_cam/camera_info"/>
+      <remap from="image" to="/usb_cam/image_raw"/>
+      <param name="publish_image_" value="false" />
+      <param name="~num_features" value="4000"/>
+      <param name="~subscribe_to_state" value="true"/>
+    </node> 
+    
+    <node machine="odroid" pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
+      <param name="~debug_view" value="false"/>
+      <param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
+      <param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
+      <param name="~fps" value="30"/>
+    </node>
+</launch>
