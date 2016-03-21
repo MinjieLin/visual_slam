@@ -1,14 +1,15 @@
 <launch>
     <arg name="bag"/>
-    <machine name="pinky" address="pinky" user="biorob"/>
-    <machine name="odroid" address="odroid" user="odroid"/>
+    <machine name="pinky" address="pinky" user="biorob" env-loader="/home/biorob/env_loader.sh"/>
+    <machine name="odroid" address="odroid" user="odroid" env-loader="/home/odroid/env_loader.sh"/>
 
-<!--    <node machine="pinky" pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
+    <node machine="pinky" pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
       <param name="publish_image_" value="true" />
       <remap from="image" to="/usb_cam/image_raw"/>
       <remap from="camera_info" to="/usb_cam/camera_info"/>
+      <param name="num_features" value="2000"/>
     </node> 
--->
+    
     <node machine="odroid" pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
       <remap from="~image" to="/usb_cam/image_raw"/>
       <remap from="~camera_info" to="/usb_cam/camera_info"/>
