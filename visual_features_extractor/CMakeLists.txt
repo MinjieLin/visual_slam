@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure 
   message_generation
   message_filters
+  visual_slam_msgs
 )
 
 
