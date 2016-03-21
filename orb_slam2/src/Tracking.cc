@@ -101,7 +101,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FramePublisher *pFramePubl
     cout << "- Initial Fast Threshold: " << fIniThFAST << endl;
     cout << "- Minimum Fast Threshold: " << fMinThFAST << endl;
 
-    state_pub = nh.advertise<orb_slam2::TrackingState>("tracking_state", 1);
+    state_pub = nh.advertise<visual_slam_msgs::TrackingState>("tracking_state", 1);
 
     tf::Transform tfT;
     tfT.setIdentity();
@@ -172,7 +172,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
 
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
     }
-    orb_slam2::TrackingState msg;
+    visual_slam_msgs::TrackingState msg;
     msg.state = mState;
     msg.header.stamp = frame.header.stamp;
     state_pub.publish(msg);

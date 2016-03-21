@@ -42,7 +42,7 @@
 #include <mutex>
 
 #include "ros/ros.h"
-#include "orb_slam2/TrackingState.h"
+#include <visual_slam_msgs/TrackingState.h>
 #include "sensor_msgs/CameraInfo.h"
 #include<tf/transform_broadcaster.h>
 

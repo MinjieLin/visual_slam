@@ -47,11 +47,15 @@
 #include "visual_features_extractor/FeatureDetectorConfig.h"
 #include "visual_features_extractor/Frame.h"
 #include "visual_features_extractor/KeyPoint.h"
+#include "visual_slam_msgs/TrackingState.h"
 
 ros::Publisher img_pub_;
 ros::Publisher msg_pub_;
+ros::Subscriber state_sub_;
 //cv::Ptr<cv::FeatureDetector> ORB_detector_;
 cv::ORB * ORB_detector_;
+int current_state;
+int num_features_;
 
 bool publish_image_;
 message_filters::Subscriber<sensor_msgs::Image> * image_filter_sub;
@@ -159,6 +163,19 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 	msg_pub_.publish(f);
 }
 
+void tracker_state_callback(const visual_slam_msgs::TrackingState &msg){
+  if (current_state != msg.state){
+    if (msg.state == visual_slam_msgs::TrackingState::NOT_INITIALIZED){
+      ORB_detector_ = new cv::ORB(num_features_);
+      ROS_INFO("Using %d features to initialize", num_features_);
+    } else {
+      ORB_detector_ = new cv::ORB(num_features_/2);    
+      ROS_INFO("Using %d features after initialization", num_features_/2);
+    }
+    current_state = msg.state;
+  }
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "feature_detector");
 	if (ros::names::remap("image") == "image"
@@ -177,14 +194,17 @@ int main(int argc, char **argv) {
 
 	// TODO: check with default of 2000
 	// TODO: make this a service
-	int num_features_;
 	ros::NodeHandle("~").param("num_features", num_features_, 4000);
   ROS_INFO("Detecting %d features", num_features_);
 	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 1);
+  
+  bool subscribe_state_;
+	ros::NodeHandle("~").param("subscribe_to_state", subscribe_state_, false);
+  state_sub_ = nh.subscribe("/slam/tracking_state", 1, tracker_state_callback);
 
 	//	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
 	ORB_detector_ = new cv::ORB(num_features_);
-
+  current_state = visual_slam_msgs::TrackingState::SYSTEM_NOT_READY;
 	image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
 			"image", 100);
 	camera_info_filter_sub = new message_filters::Subscriber<
