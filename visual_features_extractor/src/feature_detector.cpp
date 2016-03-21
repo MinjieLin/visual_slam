@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 	// TODO: check with default of 2000
 	// TODO: make this a service
 	int num_features_;
-	nh.param("publish_image_", num_features_, 4000);
+	nh.param("num_features", num_features_, 4000);
 
 	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 1);
 
