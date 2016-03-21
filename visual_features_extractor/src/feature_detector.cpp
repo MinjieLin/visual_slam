@@ -178,8 +178,8 @@ int main(int argc, char **argv) {
 	// TODO: check with default of 2000
 	// TODO: make this a service
 	int num_features_;
-	nh.param("num_features", num_features_, 4000);
-
+	ros::NodeHandle("~").param("num_features", num_features_, 4000);
+  ROS_INFO("Detecting %d features", num_features_);
 	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 1);
 
 	//	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
