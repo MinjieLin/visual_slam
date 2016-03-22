@@ -32,6 +32,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
+#include <boost/thread/mutex.hpp>
+
 #include <ros/ros.h>
 
 #include <image_transport/image_transport.h>
@@ -49,6 +51,7 @@
 #include "visual_features_extractor/KeyPoint.h"
 #include "visual_slam_msgs/TrackingState.h"
 
+boost::mutex mtx_;
 ros::Publisher img_pub_;
 ros::Publisher msg_pub_;
 ros::Subscriber state_sub_;
@@ -166,7 +169,9 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 	f.width = img->width;
 
 	// Publish keypoints
+    mtx_.lock();
 	msg_pub_.publish(f);
+    mtx_.unlock();
 }
 
 void tracker_state_callback(const visual_slam_msgs::TrackingState &msg){
