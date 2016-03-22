@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   visual_slam_msgs
 )
 
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
 
 find_package(OpenCV 2.4.3 REQUIRED)
 find_package(Eigen REQUIRED)
