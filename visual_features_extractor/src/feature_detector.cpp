@@ -224,9 +224,9 @@ int main(int argc, char **argv) {
 	 		10);
   msg_sync->registerCallback(boost::bind(&proc_img, _1, _2));
 
-	ros::spin();
-	//ros::MultiThreadedSpinner spinner;
-	//spinner.spin();
+	//ros::spin();
+	ros::MultiThreadedSpinner spinner(2);
+	spinner.spin();
 
 	return 0;
 }
