@@ -34,7 +34,9 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <thread>   
+#include <boost/asio/io_service.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/thread.hpp>  
 
 #include <ros/ros.h>
 
@@ -52,6 +54,10 @@
 #include "visual_features_extractor/Frame.h"
 #include "visual_features_extractor/KeyPoint.h"
 #include "visual_slam_msgs/TrackingState.h"
+
+boost::asio::io_service ioService;
+boost::thread_group threadpool;
+boost::asio::io_service::work work(ioService);
 
 int running_threads = 0;
 boost::mutex mtx_exc_;
@@ -114,7 +120,7 @@ void undistort_keypoints(std::vector<cv::KeyPoint> &keypoints,
 
 void proc_img(const sensor_msgs::ImageConstPtr& img,
 		const sensor_msgs::CameraInfoConstPtr& cam_info) {
-    ROS_INFO("Started callback");
+    //ROS_INFO("Started callback");
 
 	cv::ORB ORB_detector_(num_features_);
 	// Convert the image into something opencv can handle.
@@ -180,7 +186,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
     running_threads--;
     threads_available_cond.notify_all();
 
-    ROS_INFO("Finished callback");
+    //ROS_INFO("Finished callback");
 }
 
 void img_and_info_callback(const sensor_msgs::ImageConstPtr& img,  const sensor_msgs::CameraInfoConstPtr cam_info){
@@ -191,7 +197,8 @@ void img_and_info_callback(const sensor_msgs::ImageConstPtr& img,  const sensor_
     running_threads++;
     ROS_INFO("Running threads: %d", running_threads);
     
-    new std::thread(proc_img, img, cam_info);
+    //new std::thread(proc_img, img, cam_info);
+    ioService.post(boost::bind(proc_img, img, cam_info));
 }
 
 void img_callback(const sensor_msgs::ImageConstPtr& img) {
@@ -204,7 +211,8 @@ void img_callback(const sensor_msgs::ImageConstPtr& img) {
     running_threads++;
     ROS_INFO("Running threads: %d", running_threads);
     
-    new std::thread(proc_img, img, cam_info);
+    //new std::thread(proc_img, img, cam_info);
+    ioService.post(boost::bind(proc_img, img, cam_info));
 }
 
 
@@ -255,6 +263,15 @@ int main(int argc, char **argv) {
 		ROS_INFO("Undistorting points");
     current_state = visual_slam_msgs::TrackingState::SYSTEM_NOT_READY;
     
+    int max_threads;
+    ros::NodeHandle("~").param("max_threads", max_threads, 4);
+    for (int i = 0; i < 4; i ++){
+        threadpool.create_thread(
+            boost::bind(&boost::asio::io_service::run, &ioService)
+        );
+    }
+
+
     ros::Subscriber sub;
     if (undistort_points_){
         image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
@@ -269,10 +286,10 @@ int main(int argc, char **argv) {
         sub = nh.subscribe("image", 10, img_callback);
     }
 
-	//ros::spin();
-    ros::AsyncSpinner spinner(4); // Use 4 threads
-    spinner.start();
-    ros::waitForShutdown();;
+	ros::spin();
+    //ros::AsyncSpinner spinner(4); // Use 4 threads
+    //spinner.start();
+    //ros::waitForShutdown();;
 
 	return 0;
 }
