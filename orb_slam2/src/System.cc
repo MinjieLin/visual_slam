@@ -49,7 +49,7 @@ System::System(const string &strVocFile, const sensor_msgs::CameraInfoConstPtr &
     cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
 
     mpVocabulary = new ORBVocabulary();
-    bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+    bool bVocLoad = mpVocabulary->loadFromTextFile2(strVocFile);
     if(!bVocLoad)
     {
         cerr << "Wrong path to vocabulary. " << endl;
