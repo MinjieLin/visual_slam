@@ -248,7 +248,8 @@ int main(int argc, char **argv) {
 
 	// TODO: check with default of 2000
 	// TODO: make this a service
-	ros::NodeHandle("~").param("num_features", num_features_, 4000);
+	ros::NodeHandle("~").param("num_features", num_features_param_, 4000);
+	num_features_ = num_features_param_;
     ROS_INFO("Detecting %d features", num_features_);
 	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 10);
   
