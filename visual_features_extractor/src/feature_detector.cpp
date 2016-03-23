@@ -132,7 +132,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 		cv::cvtColor(frame, src_gray, cv::COLOR_RGB2GRAY);
 	} else {
 		src_gray = frame;
-		cv::cvtColor(src_gray, frame, cv::COLOR_GRAY2BGR);
+		//cv::cvtColor(src_gray, frame, cv::COLOR_GRAY2BGR);
 	}
 
 	// Output structures
