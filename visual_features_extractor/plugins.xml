@@ -1,0 +1,7 @@
+<library path="lib/libfeature_detector">
+  <class name="visual_features_extractor/FeatureExtractorNodelet" type="visual_features_extractor::FeatureExtractorNodelet" base_class_type="nodelet::Nodelet">
+  <description>
+  Visual feature extraction.
+  </description>
+  </class>
+</library>

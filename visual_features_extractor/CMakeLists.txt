@@ -15,7 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
 
 SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
 
-find_package(OpenCV 2.4.3 REQUIRED)
+#find_package(OpenCV 2.4.3 REQUIRED)
+#SET(CMAKE_LIBRARY_PATH /home/robotis/opencv-2.4.12/build/lib/ ${CMAKE_LIBRARY_PATH})
+#find_library(OpenCv 2.4 REQUIRED)
+#message(STATUS ${OpenCv_LIBRARIES})
 find_package(Eigen REQUIRED)
 find_package(Boost REQUIRED COMPONENTS signals thread)
 
@@ -47,5 +50,7 @@ include_directories(
 )
 
 add_executable(feature_detector src/feature_detector.cpp)
+#target_link_libraries(feature_detector /home/robotis/opencv-2.4.12/build/lib/libopencv_features2d.so ${catkin_LIBRARIES}) 
+#target_link_libraries(feature_detector ${catkin_LIBRARIES})
 target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(feature_detector ${PROJECT_NAME}_generate_messages_cpp)
