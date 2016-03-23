@@ -32,6 +32,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/thread.hpp>  
+
 #include <ros/ros.h>
 
 #include <image_transport/image_transport.h>
@@ -49,13 +55,22 @@
 #include "visual_features_extractor/KeyPoint.h"
 #include "visual_slam_msgs/TrackingState.h"
 
+boost::asio::io_service ioService;
+boost::thread_group threadpool;
+boost::asio::io_service::work work(ioService);
+
+int running_threads = 0;
+boost::mutex mtx_exc_;
+boost::mutex lock_mtx_;
+boost::condition_variable threads_available_cond;
 ros::Publisher img_pub_;
 ros::Publisher msg_pub_;
 ros::Subscriber state_sub_;
 //cv::Ptr<cv::FeatureDetector> ORB_detector_;
-cv::ORB * ORB_detector_;
+//cv::ORB * ORB_detector_;
 int current_state;
-int num_features_;
+int num_features_, num_features_param_;
+bool undistort_points_;
 
 bool publish_image_;
 message_filters::Subscriber<sensor_msgs::Image> * image_filter_sub;
@@ -105,6 +120,9 @@ void undistort_keypoints(std::vector<cv::KeyPoint> &keypoints,
 
 void proc_img(const sensor_msgs::ImageConstPtr& img,
 		const sensor_msgs::CameraInfoConstPtr& cam_info) {
+    //ROS_INFO("Started callback");
+
+	cv::ORB ORB_detector_(num_features_);
 	// Convert the image into something opencv can handle.
 	cv::Mat frame = cv_bridge::toCvShare(img, img->encoding)->image;
 
@@ -122,10 +140,14 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 	cv::Mat descriptors;
 
 	// Apply detector
-	(*ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
+	(ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
 
 	std::vector<cv::KeyPoint> undistorted_keypoints;
-	undistort_keypoints(keypoints, cam_info, undistorted_keypoints);
+	if (undistort_points_){
+		undistort_keypoints(keypoints, cam_info, undistorted_keypoints);
+	} else {
+		undistorted_keypoints = keypoints;
+	}
 
 	if (publish_image_) {
 		// Draw corners detected
@@ -159,21 +181,53 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 	f.height = img->height;
 	f.width = img->width;
 
-	// Publish keypoints
-	msg_pub_.publish(f);
+    boost::unique_lock<boost::mutex> lock(lock_mtx_);
+    msg_pub_.publish(f);
+    running_threads--;
+    threads_available_cond.notify_all();
+
+    //ROS_INFO("Finished callback");
 }
+
+void img_and_info_callback(const sensor_msgs::ImageConstPtr& img,  const sensor_msgs::CameraInfoConstPtr cam_info){
+    boost::unique_lock<boost::mutex> lock(lock_mtx_);
+    while (running_threads >= 4)
+        threads_available_cond.wait(lock);
+    
+    running_threads++;
+    ROS_INFO("Running threads: %d", running_threads);
+    
+    //new std::thread(proc_img, img, cam_info);
+    ioService.post(boost::bind(proc_img, img, cam_info));
+}
+
+void img_callback(const sensor_msgs::ImageConstPtr& img) {
+    const sensor_msgs::CameraInfoConstPtr cam_info;
+
+    boost::unique_lock<boost::mutex> lock(lock_mtx_);
+    while (running_threads >= 4)
+        threads_available_cond.wait(lock);
+    
+    running_threads++;
+    ROS_INFO("Running threads: %d", running_threads);
+    
+    //new std::thread(proc_img, img, cam_info);
+    ioService.post(boost::bind(proc_img, img, cam_info));
+}
+
 
 void tracker_state_callback(const visual_slam_msgs::TrackingState &msg){
   if (current_state != msg.state){
     if (msg.state == visual_slam_msgs::TrackingState::NOT_INITIALIZED){
-      ORB_detector_ = new cv::ORB(num_features_);
-      ROS_INFO("Using %d features to initialize", num_features_);
+        num_features_ = num_features_param_;
+        ROS_INFO("Using %d features to initialize", num_features_);
     } else {
-      ORB_detector_ = new cv::ORB(num_features_/2);    
-      ROS_INFO("Using %d features after initialization", num_features_/2);
+        num_features_ =  num_features_param_/2;
+        ROS_INFO("Using %d features after initialization", num_features_);
     }
     current_state = msg.state;
   }
+
 }
 
 int main(int argc, char **argv) {
@@ -187,7 +241,7 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle nh;
 
-	nh.param("publish_image_", publish_image_, false);
+	ros::NodeHandle("~").param("publish_image_", publish_image_, false);
 	if (publish_image_) {
 		img_pub_ = nh.advertise<sensor_msgs::Image>("image", 1);
 	}
@@ -195,27 +249,47 @@ int main(int argc, char **argv) {
 	// TODO: check with default of 2000
 	// TODO: make this a service
 	ros::NodeHandle("~").param("num_features", num_features_, 4000);
-  ROS_INFO("Detecting %d features", num_features_);
-	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 1);
+    ROS_INFO("Detecting %d features", num_features_);
+	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 10);
   
-  bool subscribe_state_;
+    bool subscribe_state_;
 	ros::NodeHandle("~").param("subscribe_to_state", subscribe_state_, false);
-  state_sub_ = nh.subscribe("/slam/tracking_state", 1, tracker_state_callback);
+    state_sub_ = nh.subscribe("/slam/tracking_state", 1, tracker_state_callback);
 
 	//	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
-	ORB_detector_ = new cv::ORB(num_features_);
-  current_state = visual_slam_msgs::TrackingState::SYSTEM_NOT_READY;
-	image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
-			"image", 100);
-	camera_info_filter_sub = new message_filters::Subscriber<
-			sensor_msgs::CameraInfo>(nh, "camera_info", 100);
-	msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
-			sensor_msgs::CameraInfo>(*image_filter_sub, *camera_info_filter_sub,
-	 		100);
-  msg_sync->registerCallback(boost::bind(&proc_img, _1, _2));
+	//ORB_detector_ = new cv::ORB(num_features_);
+	ros::NodeHandle("~").param("undistort_points", undistort_points_, false);
+	if(undistort_points_)
+		ROS_INFO("Undistorting points");
+    current_state = visual_slam_msgs::TrackingState::SYSTEM_NOT_READY;
+    
+    int max_threads;
+    ros::NodeHandle("~").param("max_threads", max_threads, 4);
+    for (int i = 0; i < 4; i ++){
+        threadpool.create_thread(
+            boost::bind(&boost::asio::io_service::run, &ioService)
+        );
+    }
 
-	//ros::spin();
-  ros::MultiThreadedSpinner spinner;
-  spinner.spin();
+
+    ros::Subscriber sub;
+    if (undistort_points_){
+        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
+			    "image", 10);
+	    camera_info_filter_sub = new message_filters::Subscriber<
+			    sensor_msgs::CameraInfo>(nh, "camera_info", 10);
+	    msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
+			    sensor_msgs::CameraInfo>(*image_filter_sub, *camera_info_filter_sub,
+	     		10);
+        msg_sync->registerCallback(boost::bind(&img_and_info_callback, _1, _2));
+    } else {
+        sub = nh.subscribe("image", 10, img_callback);
+    }
+
+	ros::spin();
+    //ros::AsyncSpinner spinner(4); // Use 4 threads
+    //spinner.start();
+    //ros::waitForShutdown();;
+
 	return 0;
 }

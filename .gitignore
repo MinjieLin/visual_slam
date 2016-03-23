@@ -1,4 +1,5 @@
 *~
+orb_slam2/build/
 orb_slam2/Examples/ROS/build*
 orb_slam2/runs/
 orb_slam2/Vocabulary/*
