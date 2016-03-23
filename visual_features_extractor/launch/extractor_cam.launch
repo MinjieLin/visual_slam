@@ -1,0 +1,21 @@
+<launch>
+	<node pkg="usb_cam" type="usb_cam_node" name="usb_cam" output="screen">
+		<param name="video_device" value="/dev/video0" />
+		<param name="image_width" value="640" />
+		<param name="image_height" value="480" />
+		<param name="camera_frame_id" value="usb_cam" />
+		<param name="framerate" value="15" />
+		<param name="pixel_format" value="yuyv" />
+		<param name="io_method" value="mmap" />
+	</node>
+	<node name="feature_extractor" type="feature_detector" pkg="visual_features_extractor" output="screen">
+_num_features:=4000 _subscribe_to_state:=false _undistort_points:=true
+		<param name="num_features" value="4000"/>
+		<param name="undistort_points" value="true"/>
+		<param name="subscribe_to_state" value="false"/>
+		<param name="publish_image_" value="false"/>
+		
+		<remap from="image" to="/usb_cam/image_raw"/>
+		<remap from="camera_info" to="/usb_cam/camera_info"/>
+	</node>
+</launch>
