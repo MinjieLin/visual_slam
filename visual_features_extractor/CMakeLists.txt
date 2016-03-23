@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   message_filters
   visual_slam_msgs
-  nodelet
 )
 
 SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
@@ -48,13 +47,10 @@ include_directories(
   ${PROJECT_SOURCE_DIR}
   ${catkin_INCLUDE_DIRS} 
   ${OpenCV_INCLUDE_DIRS}
-  include/
 )
 
-add_library(feature_detector src/feature_detector.cpp)
+add_executable(feature_detector src/feature_detector.cpp)
 target_link_libraries(feature_detector /home/robotis/opencv-2.4.12/build/lib/libopencv_features2d.so ${catkin_LIBRARIES}) 
 #target_link_libraries(feature_detector ${catkin_LIBRARIES})
 #target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(feature_detector ${PROJECT_NAME}_generate_messages_cpp)
-
-

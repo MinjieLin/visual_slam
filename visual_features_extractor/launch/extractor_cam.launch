@@ -9,6 +9,7 @@
 		<param name="io_method" value="mmap" />
 	</node>
 	<node name="feature_extractor" type="feature_detector" pkg="visual_features_extractor" output="screen">
+_num_features:=4000 _subscribe_to_state:=false _undistort_points:=true
 		<param name="num_features" value="4000"/>
 		<param name="undistort_points" value="true"/>
 		<param name="subscribe_to_state" value="false"/>
