@@ -1,0 +1,46 @@
+<launch>
+	<node pkg="nodelet" type="nodelet" name="manager" args="manager" output="screen"/>
+	<!-- 
+    <node pkg="nodelet" type="nodelet" name="usb_cam" 
+        args="load usb_cam/usb_cam_nodelet manager">
+		<param name="video_device" value="/dev/video0" />
+		<param name="image_width" value="640" />
+		<param name="image_height" value="480" />
+		<param name="camera_frame_id" value="usb_cam" />
+		<param name="framerate" value="20" />
+		<param name="pixel_format" value="yuyv" />
+		<param name="io_method" value="mmap" />
+  	</node>
+	-->
+    
+    <node pkg="nodelet" type="nodelet" name="uvc_camera"
+     args="load uvc_camera/CameraNodelet manager" output="screen">
+        <param name="width" type="int" value="640" />
+        <param name="height" type="int" value="480" />
+        <param name="fps" type="int" value="30" />
+
+        <param name="device" type="string" value="/dev/video0" />
+
+
+        <param name="auto_exposure" value="0" />
+        <param name="exposure_absolute" value="75" />
+        <param name="exposure_auto_priority" value="0" />
+        <param name="auto_white_balance" value="0" />
+        <param name="white_balance_temperature" value="4000" />
+        <param name="brightness" value="128" />
+        <param name="auto_focus" value="0" />
+        <param name="focus_absolute" value="0" />
+        <param name="vertical_flip" value="1" />
+    </node>
+    <node pkg="nodelet" type="nodelet" name="feature_extractor" 
+        args="load visual_features_extractor/FeatureExtractorNodelet manager">
+		<param name="num_features" value="4000"/>
+		<param name="undistort_points" value="true"/>
+		<param name="subscribe_to_state" value="false"/>
+		<param name="publish_image_" value="true"/>
+		
+		<remap from="~image" to="/usb_cam/image_raw"/>
+		<remap from="~camera_info" to="/usb_cam/camera_info"/>
+	</node>
+
+</launch>
