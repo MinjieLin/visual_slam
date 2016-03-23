@@ -33,7 +33,7 @@ Visualization Manager:
   Displays:
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /frame
+      Image Topic: /usb_cam/feature_extractor/image
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -77,7 +77,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.82842
+      Distance: 2.70798
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -89,10 +89,10 @@ Visualization Manager:
         Z: -0.128245
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: -0.189796
+      Pitch: -0.154796
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.61857
+      Yaw: 4.69857
     Saved: ~
 Window Geometry:
   Displays:
@@ -112,5 +112,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 927
-  X: 2892
+  X: 2872
   Y: 14

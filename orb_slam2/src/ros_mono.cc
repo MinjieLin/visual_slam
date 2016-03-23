@@ -95,7 +95,7 @@ void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
     if (debug_view){
         ROS_INFO("Subscribing to images and features");
         image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "/usb_cam/image_raw", 10);
-        frame_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "/features", 10);
+        frame_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "features", 10);
         msg_sync = new message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame>(*image_filter_sub, *frame_filter_sub, 10);
         msg_sync->registerCallback(boost::bind(&grabImageAndFeatures, _1, _2));
     } else {

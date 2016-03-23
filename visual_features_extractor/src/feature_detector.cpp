@@ -195,7 +195,7 @@ void img_and_info_callback(const sensor_msgs::ImageConstPtr& img,  const sensor_
         threads_available_cond.wait(lock);
     
     running_threads++;
-    ROS_INFO("Running threads: %d", running_threads);
+    //ROS_INFO("Running threads: %d", running_threads);
     
     //new std::thread(proc_img, img, cam_info);
     ioService.post(boost::bind(proc_img, img, cam_info));
@@ -209,7 +209,7 @@ void img_callback(const sensor_msgs::ImageConstPtr& img) {
         threads_available_cond.wait(lock);
     
     running_threads++;
-    ROS_INFO("Running threads: %d", running_threads);
+    //ROS_INFO("Running threads: %d", running_threads);
     
     //new std::thread(proc_img, img, cam_info);
     ioService.post(boost::bind(proc_img, img, cam_info));
@@ -232,7 +232,7 @@ void tracker_state_callback(const visual_slam_msgs::TrackingState &msg){
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "feature_detector");
-	if (ros::names::remap("image") == "image"
+    if (ros::names::remap("image_in") == "image_in"
 			|| ros::names::remap("camera_info") == "camera_info") {
 		ROS_WARN(
 				"Topics 'image' and 'camera_info' have not been remapped! Typical command-line usage:\n"
@@ -243,12 +243,12 @@ int main(int argc, char **argv) {
 
 	ros::NodeHandle("~").param("publish_image_", publish_image_, false);
 	if (publish_image_) {
-		img_pub_ = nh.advertise<sensor_msgs::Image>("image", 1);
+        img_pub_ = nh.advertise<sensor_msgs::Image>("image_out", 1);
 	}
 
 	// TODO: check with default of 2000
 	// TODO: make this a service
-	ros::NodeHandle("~").param("num_features", num_features_, 4000);
+    ros::NodeHandle("~").param("num_features", num_features_param_, 4000);
     ROS_INFO("Detecting %d features", num_features_);
 	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 10);
   
@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
     ros::Subscriber sub;
     if (undistort_points_){
         image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
-			    "image", 10);
+                "image_in", 10);
 	    camera_info_filter_sub = new message_filters::Subscriber<
 			    sensor_msgs::CameraInfo>(nh, "camera_info", 10);
 	    msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
 	     		10);
         msg_sync->registerCallback(boost::bind(&img_and_info_callback, _1, _2));
     } else {
-        sub = nh.subscribe("image", 10, img_callback);
+        sub = nh.subscribe("image_in", 10, img_callback);
     }
 
 	ros::spin();

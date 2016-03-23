@@ -50,6 +50,11 @@ System::System(const string &strVocFile, const sensor_msgs::CameraInfoConstPtr &
 
     mpVocabulary = new ORBVocabulary();
     bool bVocLoad = mpVocabulary->loadFromTextFile2(strVocFile);
+
+//    mpVocabulary->saveToTextFile("/home/muhaimen/Desktop/Voc2.txt");
+//    mpVocabulary->loadFromTextFile(strVocFile);
+//    mpVocabulary->saveToTextFile("/home/muhaimen/Desktop/Voc1.txt");
+
     if(!bVocLoad)
     {
         cerr << "Wrong path to vocabulary. " << endl;

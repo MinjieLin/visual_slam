@@ -1,22 +1,22 @@
 <launch>
+    <param name="enable_statistics" value="true"/>
 
     <node pkg="visual_features_extractor" type="feature_detector" name="feature_detector" output="screen">
       <param name="publish_image_" value="true" />
-      <remap from="image" to="/usb_cam/image_raw"/>
+      <remap from="image_in" to="/usb_cam/image_raw"/>
+      <remap from="image_out" to="/usb_cam/feature_extractor/image"/>
       <remap from="camera_info" to="/usb_cam/camera_info"/>
     </node> 
 
     <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
-      <remap from="~image" to="/usb_cam/image_raw"/>
-      <remap from="~camera_info" to="/usb_cam/camera_info"/>
       <remap from="~features" to="/features"/>
-      <param name="debug_view" value="false"/>
-      <param name="vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
-      <param name="settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
-      <param name="fps" value="30"/>
+      <param name="~debug_view" value="true"/>
+      <param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
+      <param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
+      <param name="~fps" value="15"/>
     </node>
 
-    <node pkg="rosbag" type="play" name="player" output="screen" args="--loop --quiet /home/muhaimen/bagfiles/w740su_2016-03-14-18-25-57.bag"/>
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--quiet --loop /home/muhaimen/bagfiles/laptop3.bag --topics /usb_cam/camera_info /usb_cam/image_raw"/>
     
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find orb_slam2)/launch/w740su.rviz" output="log"></node>
 
