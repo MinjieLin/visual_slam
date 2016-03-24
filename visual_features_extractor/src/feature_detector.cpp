@@ -69,7 +69,6 @@ ros::Publisher msg_pub_;
 ros::Subscriber state_sub_;
 //cv::Ptr<cv::FeatureDetector> ORB_detector_;
 //cv::ORB * ORB_detector_;
-ORB_SLAM2::ORBextractor * ORB_detector_;
 
 int current_state;
 int num_features_, num_features_param_;
@@ -192,6 +191,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
     f.height = img->height;
     f.width = img->width;
 
+    ROS_INFO("Frame processed");
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
     msg_pub_.publish(f);
     running_threads--;
@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
     nh.param("ini_thrs", ini_thrs_, 20.0f);
     nh.param("min_thrs", min_thrs_, 7.0f);
     nh.param("orb_extractor", orb_extractor_, std::string("opencv"));
-    if (orb_extractor_.compare("opencv") != 0 || orb_extractor_.compare("orb_slam2") != 0)
+    if (orb_extractor_.compare("opencv") != 0 && orb_extractor_.compare("orb_slam2") != 0)
     {
         ROS_ERROR("orb_extractor parameter should be opencv or orb_slam2");
         ros::shutdown();
@@ -290,7 +290,6 @@ int main(int argc, char **argv) {
 
     //	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
     //ORB_detector_ = new cv::ORB(num_features_);
-    ORB_detector_ = new ORB_SLAM2::ORBextractor(num_features_/2, 1.2f, 8, 20, 8);
 
     nh.param("undistort_points", undistort_points_, false);
     if(undistort_points_)
