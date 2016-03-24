@@ -143,7 +143,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 	(ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
 
 	std::vector<cv::KeyPoint> undistorted_keypoints;
-	if (undistort_points_){
+	if (undistort_points_ && keypoints.size() > 0){
 		undistort_keypoints(keypoints, cam_info, undistorted_keypoints);
 	} else {
 		undistorted_keypoints = keypoints;
@@ -232,14 +232,14 @@ void tracker_state_callback(const visual_slam_msgs::TrackingState &msg){
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "feature_detector");
-    if (ros::names::remap("image_in") == "image_in"
-			|| ros::names::remap("camera_info") == "camera_info") {
+    if (ros::names::remap("~image_in") == "~image_in"
+			|| ros::names::remap("~camera_info") == "~camera_info") {
 		ROS_WARN(
-				"Topics 'image' and 'camera_info' have not been remapped! Typical command-line usage:\n"
+				"Topics 'image_in' and 'camera_info' have not been remapped! Typical command-line usage:\n"
 						"\t$ rosrun image_rotate image_rotate image:=<image topic> [transport] camera_info:=<camera_info topic>");
 	}
 
-	ros::NodeHandle nh;
+	ros::NodeHandle nh("~");
 
 	ros::NodeHandle("~").param("publish_image_", publish_image_, false);
 	if (publish_image_) {
@@ -249,12 +249,13 @@ int main(int argc, char **argv) {
 	// TODO: check with default of 2000
 	// TODO: make this a service
     ros::NodeHandle("~").param("num_features", num_features_param_, 4000);
+	num_features_ = num_features_param_;
     ROS_INFO("Detecting %d features", num_features_);
 	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 10);
   
     bool subscribe_state_;
 	ros::NodeHandle("~").param("subscribe_to_state", subscribe_state_, false);
-    state_sub_ = nh.subscribe("/slam/tracking_state", 1, tracker_state_callback);
+    state_sub_ = nh.subscribe("tracking_state", 1, tracker_state_callback);
 
 	//	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
 	//ORB_detector_ = new cv::ORB(num_features_);
