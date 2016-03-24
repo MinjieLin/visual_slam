@@ -34,9 +34,11 @@ include_directories(
   ${PROJECT_SOURCE_DIR}
   ${catkin_INCLUDE_DIRS} 
   ${OpenCV_INCLUDE_DIRS}
+  include/
 )
 
-add_executable(feature_detector src/feature_detector.cpp)
+
+add_executable(feature_detector src/feature_detector.cpp src/ORBExtractor.cpp)
 
 set(CUSTOM_CV /home/robotis/opencv-2.4.12/build/lib/libopencv_features2d.so)
 if(EXISTS ${CUSTOM_CV})
@@ -44,6 +46,7 @@ if(EXISTS ${CUSTOM_CV})
 else()
   target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 endif()
+
 #target_link_libraries(feature_detector ${catkin_LIBRARIES})
-#target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(feature_detector ${PROJECT_NAME}_generate_messages_cpp)

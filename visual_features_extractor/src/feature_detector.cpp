@@ -36,7 +36,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread/thread.hpp>  
+#include <boost/thread/thread.hpp>
 
 #include <ros/ros.h>
 
@@ -51,6 +51,7 @@
 #include "opencv2/features2d/features2d.hpp"
 
 #include "visual_features_extractor/FeatureDetectorConfig.h"
+#include "visual_features_extractor/ORBExtractor.h"
 #include "visual_slam_msgs/Frame.h"
 #include "visual_slam_msgs/KeyPoint.h"
 #include "visual_slam_msgs/TrackingState.h"
@@ -68,8 +69,13 @@ ros::Publisher msg_pub_;
 ros::Subscriber state_sub_;
 //cv::Ptr<cv::FeatureDetector> ORB_detector_;
 //cv::ORB * ORB_detector_;
+ORB_SLAM2::ORBextractor * ORB_detector_;
+
 int current_state;
 int num_features_, num_features_param_;
+int levels_;
+float scale_factor_, ini_thrs_, min_thrs_;
+std::string orb_extractor_;
 bool undistort_points_;
 
 bool publish_image_;
@@ -78,108 +84,113 @@ message_filters::Subscriber<sensor_msgs::CameraInfo> * camera_info_filter_sub;
 message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::CameraInfo> * msg_sync;
 
 void undistort_keypoints(std::vector<cv::KeyPoint> &keypoints,
-		const sensor_msgs::CameraInfoConstPtr& cam_info,
-		std::vector<cv::KeyPoint> &undistorted_keypoints) {
+                         const sensor_msgs::CameraInfoConstPtr& cam_info,
+                         std::vector<cv::KeyPoint> &undistorted_keypoints) {
 
-	// Fill matrix with points
-	cv::Mat mat(keypoints.size(), 2, CV_32F);
-	for (int i = 0; i < keypoints.size(); i++) {
-		mat.at<float>(i, 0) = keypoints[i].pt.x;
-		mat.at<float>(i, 1) = keypoints[i].pt.y;
-	}
+    // Fill matrix with points
+    cv::Mat mat(keypoints.size(), 2, CV_32F);
+    for (int i = 0; i < keypoints.size(); i++) {
+        mat.at<float>(i, 0) = keypoints[i].pt.x;
+        mat.at<float>(i, 1) = keypoints[i].pt.y;
+    }
 
-	cv::Mat K = cv::Mat::eye(3, 3, CV_32F);
-	K.at<float>(0, 0) = cam_info->K.at(0);
-	K.at<float>(1, 1) = cam_info->K.at(4);
-	K.at<float>(0, 2) = cam_info->K.at(2);
-	K.at<float>(1, 2) = cam_info->K.at(5);
-	K.at<float>(2, 2) = 1;
+    cv::Mat K = cv::Mat::eye(3, 3, CV_32F);
+    K.at<float>(0, 0) = cam_info->K.at(0);
+    K.at<float>(1, 1) = cam_info->K.at(4);
+    K.at<float>(0, 2) = cam_info->K.at(2);
+    K.at<float>(1, 2) = cam_info->K.at(5);
+    K.at<float>(2, 2) = 1;
 
-	cv::Mat DistCoef(4, 1, CV_32F);
-	// TODO: check that this is ok
-	DistCoef.at<float>(0) = cam_info->D.at(0);
-	DistCoef.at<float>(1) = cam_info->D.at(1);
-	DistCoef.at<float>(2) = cam_info->D.at(2);
-	DistCoef.at<float>(3) = cam_info->D.at(3);
+    cv::Mat DistCoef(4, 1, CV_32F);
+    // TODO: check that this is ok
+    DistCoef.at<float>(0) = cam_info->D.at(0);
+    DistCoef.at<float>(1) = cam_info->D.at(1);
+    DistCoef.at<float>(2) = cam_info->D.at(2);
+    DistCoef.at<float>(3) = cam_info->D.at(3);
 
+    // Undistort points
+    mat = mat.reshape(2);
+    cv::undistortPoints(mat, mat, K, DistCoef, cv::Mat(), K);
+    mat = mat.reshape(1);
 
-	// Undistort points
-	mat = mat.reshape(2);
-	cv::undistortPoints(mat, mat, K, DistCoef, cv::Mat(), K);
-	mat = mat.reshape(1);
-
-	// Fill undistorted keypoint vector
-	undistorted_keypoints.resize(keypoints.size());
-	for (int i = 0; i < keypoints.size(); i++) {
-		cv::KeyPoint kp = keypoints[i];
-		kp.pt.x = mat.at<float>(i, 0);
-		kp.pt.y = mat.at<float>(i, 1);
-		undistorted_keypoints[i] = kp;
-	}
+    // Fill undistorted keypoint vector
+    undistorted_keypoints.resize(keypoints.size());
+    for (int i = 0; i < keypoints.size(); i++) {
+        cv::KeyPoint kp = keypoints[i];
+        kp.pt.x = mat.at<float>(i, 0);
+        kp.pt.y = mat.at<float>(i, 1);
+        undistorted_keypoints[i] = kp;
+    }
 }
 
 void proc_img(const sensor_msgs::ImageConstPtr& img,
-		const sensor_msgs::CameraInfoConstPtr& cam_info) {
+              const sensor_msgs::CameraInfoConstPtr& cam_info) {
     //ROS_INFO("Started callback");
 
-	cv::ORB ORB_detector_(num_features_);
-	// Convert the image into something opencv can handle.
-	cv::Mat frame = cv_bridge::toCvShare(img, img->encoding)->image;
 
-	// Convert to gray
-	cv::Mat src_gray;
-	if (frame.channels() > 1) {
-		cv::cvtColor(frame, src_gray, cv::COLOR_RGB2GRAY);
-	} else {
-		src_gray = frame;
-		//cv::cvtColor(src_gray, frame, cv::COLOR_GRAY2BGR);
-	}
+    // Convert the image into something opencv can handle.
+    cv::Mat frame = cv_bridge::toCvShare(img, img->encoding)->image;
 
-	// Output structures
-	std::vector<cv::KeyPoint> keypoints;
-	cv::Mat descriptors;
+    // Convert to gray
+    cv::Mat src_gray;
+    if (frame.channels() > 1) {
+        cv::cvtColor(frame, src_gray, cv::COLOR_RGB2GRAY);
+    } else {
+        src_gray = frame;
+        //cv::cvtColor(src_gray, frame, cv::COLOR_GRAY2BGR);
+    }
 
-	// Apply detector
-	(ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
+    // Output structures
+    std::vector<cv::KeyPoint> keypoints;
+    cv::Mat descriptors;
 
-	std::vector<cv::KeyPoint> undistorted_keypoints;
-	if (undistort_points_ && keypoints.size() > 0){
-		undistort_keypoints(keypoints, cam_info, undistorted_keypoints);
-	} else {
-		undistorted_keypoints = keypoints;
-	}
+    // Apply detector
+    if (orb_extractor_.compare("opencv") == 0){
+        cv::ORB ORB_detector_(num_features_, scale_factor_, levels_, ini_thrs_);
+        (ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
+    } else {
+        ORB_SLAM2::ORBextractor ORB_detector_(num_features_,scale_factor_, levels_, ini_thrs_, min_thrs_);
+        (ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
+    }
 
-	if (publish_image_) {
-		// Draw corners detected
-		int r = 4;
-		for (size_t i = 0; i < keypoints.size(); i++) {
-			cv::circle(frame, keypoints[i].pt, r, cv::Scalar(255, 0, 0));
-		}
-		// Publish the image.
-		sensor_msgs::Image::Ptr out_img = cv_bridge::CvImage(img->header,
-				"bgr8", frame).toImageMsg();
-		img_pub_.publish(out_img);
-	}
+    std::vector<cv::KeyPoint> undistorted_keypoints;
+    if (undistort_points_ && keypoints.size() > 0){
+        undistort_keypoints(keypoints, cam_info, undistorted_keypoints);
+    } else {
+        undistorted_keypoints = keypoints;
+    }
 
-	// Create msgs
-	visual_slam_msgs::Frame f;
-	for (size_t i = 0; i < undistorted_keypoints.size(); i++) {
-		visual_slam_msgs::KeyPoint kp;
-		kp.x = undistorted_keypoints[i].pt.x;
-		kp.y = undistorted_keypoints[i].pt.y;
-		kp.size = undistorted_keypoints[i].size;
-		kp.angle = undistorted_keypoints[i].angle;
-		kp.octave = undistorted_keypoints[i].octave;
+    if (publish_image_) {
+        // Draw corners detected
+        int r = 4;
+        for (size_t i = 0; i < keypoints.size(); i++) {
+            cv::circle(frame, keypoints[i].pt, r, cv::Scalar(255, 0, 0));
+        }
+        // Publish the image.
+        sensor_msgs::Image::Ptr out_img = cv_bridge::CvImage(img->header,
+                                                             "bgr8", frame).toImageMsg();
+        img_pub_.publish(out_img);
+    }
 
-		// Pointer to the i-th row
-		std::copy(descriptors.ptr<uchar>(i), descriptors.ptr<uchar>(i) + 32,
-				kp.descriptor.begin());
+    // Create msgs
+    visual_slam_msgs::Frame f;
+    for (size_t i = 0; i < undistorted_keypoints.size(); i++) {
+        visual_slam_msgs::KeyPoint kp;
+        kp.x = undistorted_keypoints[i].pt.x;
+        kp.y = undistorted_keypoints[i].pt.y;
+        kp.size = undistorted_keypoints[i].size;
+        kp.angle = undistorted_keypoints[i].angle;
+        kp.octave = undistorted_keypoints[i].octave;
 
-		f.keypoints.push_back(kp);
-	}
-	f.header.stamp = img->header.stamp;
-	f.height = img->height;
-	f.width = img->width;
+        // Pointer to the i-th row
+        std::copy(descriptors.ptr<uchar>(i), descriptors.ptr<uchar>(i) + 32,
+                  kp.descriptor.begin());
+
+        f.keypoints.push_back(kp);
+    }
+    f.header.stamp = img->header.stamp;
+    f.height = img->height;
+    f.width = img->width;
 
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
     msg_pub_.publish(f);
@@ -193,10 +204,10 @@ void img_and_info_callback(const sensor_msgs::ImageConstPtr& img,  const sensor_
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
     while (running_threads >= 4)
         threads_available_cond.wait(lock);
-    
+
     running_threads++;
     //ROS_INFO("Running threads: %d", running_threads);
-    
+
     //new std::thread(proc_img, img, cam_info);
     ioService.post(boost::bind(proc_img, img, cam_info));
 }
@@ -207,90 +218,113 @@ void img_callback(const sensor_msgs::ImageConstPtr& img) {
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
     while (running_threads >= 4)
         threads_available_cond.wait(lock);
-    
+
     running_threads++;
     //ROS_INFO("Running threads: %d", running_threads);
-    
+
     //new std::thread(proc_img, img, cam_info);
     ioService.post(boost::bind(proc_img, img, cam_info));
 }
 
 
-void tracker_state_callback(const visual_slam_msgs::TrackingState &msg){
-  if (current_state != msg.state){
-    if (msg.state == visual_slam_msgs::TrackingState::NOT_INITIALIZED){
-        num_features_ = num_features_param_;
-        ROS_INFO("Using %d features to initialize", num_features_);
-    } else {
-        num_features_ =  num_features_param_/2;
-        ROS_INFO("Using %d features after initialization", num_features_);
+void tracker_state_callback(const visual_slam_msgs::TrackingState &msg) {
+    if (current_state != msg.state) {
+        if (msg.state == visual_slam_msgs::TrackingState::NOT_INITIALIZED) {
+            //      ORB_detector_ = new cv::ORB(num_features_);
+            num_features_ =  num_features_param_;
+            ROS_INFO("Using %d features to initialize", num_features_);
+        } else {
+            //      ORB_detector_ = new cv::ORB(num_features_/2);
+            num_features_ = num_features_param_/2;
+            ROS_INFO("Using %d features after initialization",
+                     num_features_ / 2);
+        }
+        current_state = msg.state;
     }
-    current_state = msg.state;
-  }
-
 }
 
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "feature_detector");
+    ros::init(argc, argv, "feature_detector");
     if (ros::names::remap("~image_in") == "~image_in"
-			|| ros::names::remap("~camera_info") == "~camera_info") {
-		ROS_WARN(
-				"Topics 'image_in' and 'camera_info' have not been remapped! Typical command-line usage:\n"
-						"\t$ rosrun image_rotate image_rotate image:=<image topic> [transport] camera_info:=<camera_info topic>");
-	}
+            || ros::names::remap("~camera_info") == "~camera_info") {
+        ROS_WARN(
+                    "Topics 'image_in' and 'camera_info' have not been remapped! Typical command-line usage:\n"
+                    "\t$ rosrun image_rotate image_rotate image:=<image topic> [transport] camera_info:=<camera_info topic>");
+    }
 
-	ros::NodeHandle nh("~");
+    ros::NodeHandle nh("~");
 
-	ros::NodeHandle("~").param("publish_image_", publish_image_, false);
-	if (publish_image_) {
+    nh.param("publish_image_", publish_image_, false);
+    if (publish_image_) {
         img_pub_ = nh.advertise<sensor_msgs::Image>("image_out", 1);
-	}
+    }
 
-	// TODO: check with default of 2000
-	// TODO: make this a service
-    ros::NodeHandle("~").param("num_features", num_features_param_, 4000);
-	num_features_ = num_features_param_;
-    ROS_INFO("Detecting %d features", num_features_);
-	msg_pub_ = nh.advertise<visual_slam_msgs::Frame>("features", 10);
-  
+
+    nh.param("num_features", num_features_param_, 4000);
+    nh.param("levels", levels_, 8);
+    nh.param("scale_factor", scale_factor_, 1.2f);
+    nh.param("ini_thrs", ini_thrs_, 20.0f);
+    nh.param("min_thrs", min_thrs_, 7.0f);
+    nh.param("orb_extractor", orb_extractor_, std::string("opencv"));
+    if (orb_extractor_.compare("opencv") != 0 || orb_extractor_.compare("orb_slam2") != 0)
+    {
+        ROS_ERROR("orb_extractor parameter should be opencv or orb_slam2");
+        ros::shutdown();
+    }
+    num_features_ = num_features_param_;
+
+    ROS_INFO("Using a feature extractor from %s with parameters:", orb_extractor_.c_str());
+    ROS_INFO("Num features: %d", num_features_);
+    ROS_INFO("Scale factor: %f", scale_factor_);
+    ROS_INFO("Levels: %d", levels_);
+    ROS_INFO("Initial threshold: %f", ini_thrs_);
+    ROS_INFO("Min threshold: %f", min_thrs_);
+
+
+
+    msg_pub_ = nh.advertise<visual_slam_msgs::Frame>("features", 10);
+
     bool subscribe_state_;
-	ros::NodeHandle("~").param("subscribe_to_state", subscribe_state_, false);
+    nh.param("subscribe_to_state", subscribe_state_, false);
     state_sub_ = nh.subscribe("tracking_state", 1, tracker_state_callback);
 
-	//	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
-	//ORB_detector_ = new cv::ORB(num_features_);
-	ros::NodeHandle("~").param("undistort_points", undistort_points_, false);
-	if(undistort_points_)
-		ROS_INFO("Undistorting points");
+    //	ORB_detector_ = new cv::ORB(num_features_,scale_factor_,nlevels_,edge_threshold_);
+    //ORB_detector_ = new cv::ORB(num_features_);
+    ORB_detector_ = new ORB_SLAM2::ORBextractor(num_features_/2, 1.2f, 8, 20, 8);
+
+    nh.param("undistort_points", undistort_points_, false);
+    if(undistort_points_)
+        ROS_INFO("Undistorting points");
     current_state = visual_slam_msgs::TrackingState::SYSTEM_NOT_READY;
-    
+
     int max_threads;
     ros::NodeHandle("~").param("max_threads", max_threads, 4);
     for (int i = 0; i < 4; i ++){
         threadpool.create_thread(
-            boost::bind(&boost::asio::io_service::run, &ioService)
-        );
+                    boost::bind(&boost::asio::io_service::run, &ioService)
+                    );
     }
 
 
     ros::Subscriber sub;
     if (undistort_points_){
         image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh,
-                "image_in", 10);
-	    camera_info_filter_sub = new message_filters::Subscriber<
-			    sensor_msgs::CameraInfo>(nh, "camera_info", 10);
-	    msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
-			    sensor_msgs::CameraInfo>(*image_filter_sub, *camera_info_filter_sub,
-	     		10);
+                                                                               "image_in", 10);
+        camera_info_filter_sub = new message_filters::Subscriber<
+                sensor_msgs::CameraInfo>(nh, "camera_info", 10);
+        msg_sync = new message_filters::TimeSynchronizer<sensor_msgs::Image,
+                sensor_msgs::CameraInfo>(*image_filter_sub, *camera_info_filter_sub,
+                                         10);
         msg_sync->registerCallback(boost::bind(&img_and_info_callback, _1, _2));
     } else {
         sub = nh.subscribe("image_in", 10, img_callback);
     }
 
-	ros::spin();
-    //ros::AsyncSpinner spinner(4); // Use 4 threads
-    //spinner.start();
-    //ros::waitForShutdown();;
+    ros::spin();
 
-	return 0;
+    return 0;
 }
+
+
+
+
