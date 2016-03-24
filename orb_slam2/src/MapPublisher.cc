@@ -107,7 +107,8 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     mReferencePoints.color.a = 1.0;
 
     //Configure Publisher
-    publisher = nh.advertise<visualization_msgs::Marker>("ORB_SLAM/Map", 10);
+    ros::NodeHandle nh("~");
+    publisher = nh.advertise<visualization_msgs::Marker>("map", 10);
 
     publisher.publish(mPoints);
     publisher.publish(mReferencePoints);

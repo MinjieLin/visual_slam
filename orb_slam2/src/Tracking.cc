@@ -105,7 +105,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FramePublisher *pFramePubl
 
     tf::Transform tfT;
     tfT.setIdentity();
-    mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "/ORB_SLAM/World", "/ORB_SLAM/Camera"));
+    mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "~world", "~camera"));
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -170,7 +170,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
 
         tf::Transform tfTcw(M,V);
 
-        mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
+        mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "~world", "~camera"));
     }
     visual_slam_msgs::TrackingState msg;
     msg.state = mState;

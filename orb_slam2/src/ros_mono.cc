@@ -40,15 +40,14 @@ using namespace std;
 using namespace sensor_msgs;
 using namespace message_filters;
 
+// Globals
 ORB_SLAM2::System* mpSLAM;
-bool debug_view;
-
-ros::Subscriber frame_sub;
-message_filters::Subscriber<sensor_msgs::Image > * image_filter_sub;
-message_filters::Subscriber<visual_features_extractor::Frame >  * frame_filter_sub;
-message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame > * msg_sync;
+ros::Subscriber features_sub;
 ros::Subscriber cam_info_sub;
-
+message_filters::Subscriber<sensor_msgs::Image > * image_filter_sub;
+message_filters::Subscriber<visual_features_extractor::Frame >  * features_filter_sub;
+message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame > * msg_sync;
+bool debug_view;
 string vocab_path;
 
 void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
@@ -90,17 +89,17 @@ void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
 
     ROS_INFO("SLAM Initialized");
 
-    nh.param("debug_view", debug_view, true);
+
 
     if (debug_view){
         ROS_INFO("Subscribing to images and features");
-        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "/usb_cam/image_raw", 10);
-        frame_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "features", 10);
-        msg_sync = new message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame>(*image_filter_sub, *frame_filter_sub, 10);
+        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "image_raw", 10);
+        features_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "features", 10);
+        msg_sync = new message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame>(*image_filter_sub, *features_filter_sub, 10);
         msg_sync->registerCallback(boost::bind(&grabImageAndFeatures, _1, _2));
     } else {
         ROS_INFO("Subscribing to features only");
-        frame_sub = nh.subscribe("/features", 10, &grabFeatures);
+        features_sub = nh.subscribe("features", 10, &grabFeatures);
     }
 
     cam_info_sub.shutdown();
@@ -108,10 +107,12 @@ void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "Mono");
+    ros::init(argc, argv, "slam");
     ros::start();
 
     ros::NodeHandle nh("~");
+
+    nh.param("debug_view", debug_view, true);
 
     if (!nh.getParam("vocabulary_path",vocab_path))
     {
@@ -119,7 +120,7 @@ int main(int argc, char **argv)
         ROS_INFO("Vocabulary Path Not Provided. Using %s", vocab_path.c_str());
     }
 
-    cam_info_sub = nh.subscribe("/usb_cam/camera_info", 1, &grab_cam_info_and_setup);
+    cam_info_sub = nh.subscribe("camera_info", 1, &grab_cam_info_and_setup);
 
     ROS_INFO("Waiting for camera parameters to initialize SLAM");
 

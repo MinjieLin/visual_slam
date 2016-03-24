@@ -1,9 +1,8 @@
 <launch>
-    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
-      <param name="~debug_view" value="false"/>
-      <param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
-      <param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
-      <param name="~fps" value="30"/>
-    </node>
-    
+	<node pkg="orb_slam2" type="ros_mono" name="slam" output="screen">
+		<param name="~debug_view" value="false"/>
+		<param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
+		<param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
+		<param name="~fps" value="30"/>
+	</node>    
 </launch>

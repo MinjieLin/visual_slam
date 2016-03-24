@@ -27,13 +27,13 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Image
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /usb_cam/feature_extractor/image
+      Image Topic: /debug
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -47,10 +47,7 @@ Visualization Manager:
       Marker Topic: /ORB_SLAM/Map
       Name: Marker
       Namespaces:
-        Camera: true
-        Graph: true
-        KeyFrames: true
-        MapPoints: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -112,5 +109,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 927
-  X: 2872
+  X: 973
   Y: 14

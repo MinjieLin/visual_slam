@@ -38,6 +38,7 @@ class MapPublisher
 public:
     MapPublisher(Map* pMap);
 
+
     Map* mpMap;
 
     void Refresh();
@@ -52,7 +53,6 @@ private:
     bool isCamUpdated();
     void ResetCamFlag();
 
-    ros::NodeHandle nh;
     ros::Publisher publisher;
 
     visualization_msgs::Marker mPoints;
