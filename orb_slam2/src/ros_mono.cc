@@ -53,6 +53,7 @@ string vocab_path;
 void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
                           const visual_slam_msgs::FrameConstPtr & frame)
 {
+		//ROS_INFO("Reveived frame with info");
     // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptr;
     try
@@ -70,6 +71,7 @@ void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
 
 void grabFeatures(const visual_slam_msgs::FrameConstPtr & frame)
 {
+		//ROS_INFO("Reveived frame with info");
     // If no features, just pass on a blank image. It has heigh rows and width columns
     cv::Mat emptyMat = cv::Mat(frame->height,frame->width, CV_8U);
     // Fill it with black
