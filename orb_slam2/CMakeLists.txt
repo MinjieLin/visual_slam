@@ -64,7 +64,6 @@ include_directories(
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
-# Only compile ros_mono slam if pangolin is available
 add_library(${PROJECT_NAME} SHARED
 	src/System.cc
 	src/Tracking.cc

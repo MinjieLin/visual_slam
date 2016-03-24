@@ -1453,7 +1453,7 @@ bool TemplatedVocabulary<TDescriptor, F>::loadFromTextFile2(const std::string &f
     std::fseek(fp, 0, SEEK_END);
     content.resize(std::ftell(fp));
     std::rewind(fp);
-    std::fread(&content[0], 1, content.size(), fp);
+    int res = std::fread(&content[0], 1, content.size(), fp);
     std::fclose(fp);
 
     char *string = strdup(content.c_str());
