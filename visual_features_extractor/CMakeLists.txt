@@ -50,7 +50,7 @@ include_directories(
 )
 
 add_executable(feature_detector src/feature_detector.cpp)
-#target_link_libraries(feature_detector /home/robotis/opencv-2.4.12/build/lib/libopencv_features2d.so ${catkin_LIBRARIES}) 
+target_link_libraries(feature_detector /home/robotis/opencv-2.4.12/build/lib/libopencv_features2d.so ${catkin_LIBRARIES}) 
 #target_link_libraries(feature_detector ${catkin_LIBRARIES})
-target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#target_link_libraries(feature_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(feature_detector ${PROJECT_NAME}_generate_messages_cpp)
