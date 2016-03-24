@@ -19,11 +19,14 @@
 */
 
 #include "LocalMapping.h"
-#include "LoopClosing.h"
+
 #include "ORBmatcher.h"
 #include "Optimizer.h"
+#include "Map.h"
+#include "Tracking.h"
+#include "MapPoint.h"
 
-#include<mutex>
+#include <mutex>
 
 namespace ORB_SLAM2
 {

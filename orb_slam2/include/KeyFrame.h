@@ -21,15 +21,16 @@
 #ifndef KEYFRAME_H
 #define KEYFRAME_H
 
-#include "MapPoint.h"
+#include <mutex>
+#include <set>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
+
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
-#include "ORBVocabulary.h"
-#include "ORBextractor.h"
-#include "Frame.h"
-#include "KeyFrameDatabase.h"
 
-#include <mutex>
+#include "ORBVocabulary.h"
 
 
 namespace ORB_SLAM2

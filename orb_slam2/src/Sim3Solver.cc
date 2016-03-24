@@ -25,10 +25,11 @@
 #include <cmath>
 #include <opencv2/core/core.hpp>
 
+#include "Thirdparty/DBoW2/DUtils/Random.h"
+
 #include "KeyFrame.h"
 #include "ORBmatcher.h"
-
-#include "Thirdparty/DBoW2/DUtils/Random.h"
+#include "MapPoint.h"
 
 namespace ORB_SLAM2
 {

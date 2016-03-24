@@ -21,22 +21,20 @@
 #ifndef FRAMEPUBLISHER_H
 #define FRAMEPUBLISHER_H
 
-#include "Tracking.h"
-#include "MapPoint.h"
-#include "Map.h"
+#include <vector>
 
-#include "ros/ros.h"
-
+#include <ros/ros.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
 #include <boost/thread.hpp>
 
-
 namespace ORB_SLAM2
 {
 
 class Tracking;
+class Map;
+class MapPoint;
 
 class FramePublisher
 {
@@ -58,14 +56,14 @@ protected:
     void DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText);
 
     cv::Mat mIm;
-    vector<cv::KeyPoint> mvCurrentKeys;
+    std::vector<cv::KeyPoint> mvCurrentKeys;
 
-    vector<bool> mvbOutliers;
+    std::vector<bool> mvbOutliers;
 
-    vector<MapPoint*> mvpMatchedMapPoints;
+    std::vector<MapPoint*> mvpMatchedMapPoints;
     int mnTracked;
-    vector<cv::KeyPoint> mvIniKeys;
-    vector<int> mvIniMatches;
+    std::vector<cv::KeyPoint> mvIniKeys;
+    std::vector<int> mvIniMatches;
 
     ros::NodeHandle mNH;
     ros::Publisher mImagePub;

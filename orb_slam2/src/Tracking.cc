@@ -21,24 +21,33 @@
 
 #include "Tracking.h"
 
-#include<opencv2/core/core.hpp>
-#include<opencv2/features2d/features2d.hpp>
+#include <algorithm>
+#include <iostream>
+#include <mutex>
 
-#include"ORBmatcher.h"
-#include"Converter.h"
-#include"Map.h"
-#include"Initializer.h"
-#include<algorithm>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
-#include"Optimizer.h"
-#include"PnPsolver.h"
+#include "ORBmatcher.h"
+#include "FramePublisher.h"
+#include "Map.h"
+#include "LocalMapping.h"
+#include "LoopClosing.h"
+#include "ORBVocabulary.h"
+#include "KeyFrameDatabase.h"
+#include "ORBextractor.h"
+#include "Initializer.h"
+#include "MapPublisher.h"
+#include "System.h"
+#include "Converter.h"
+#include "Initializer.h"
+#include "Optimizer.h"
+#include "PnPsolver.h"
 
-#include<iostream>
-#include<mutex>
-
-#include "visual_slam_msgs/Frame.h"
-#include "ros/ros.h"
+#include <ros/ros.h>
+#include <visual_slam_msgs/TrackingState.h>
 #include <tf/tf.h>
+
 
 using namespace std;
 
@@ -155,11 +164,7 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
     bool debug_view;
     nh.param("debug_view", debug_view, true);
 
-    if(debug_view)
-        mpFramePublisher->Refresh();
-    mpMapPublisher->Refresh();
-
-    if(!mCurrentFrame.mTcw.empty())
+        if(!mCurrentFrame.mTcw.empty())
     {
         cv::Mat Rwc = mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3).t();
         cv::Mat twc = -Rwc*mCurrentFrame.mTcw.rowRange(0,3).col(3);
@@ -171,7 +176,16 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
         tf::Transform tfTcw(M,V);
 
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "~world", "~camera"));
+
+        // Update camera pose
+        mpMapPublisher->SetCurrentCameraPose(mCurrentFrame.mTcw);
     }
+
+    if(debug_view)
+        mpFramePublisher->Refresh();
+    mpMapPublisher->Refresh();
+
+
     visual_slam_msgs::TrackingState msg;
     msg.state = mState;
     msg.header.stamp = frame.header.stamp;

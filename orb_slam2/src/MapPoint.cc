@@ -19,9 +19,13 @@
 */
 
 #include "MapPoint.h"
-#include "ORBmatcher.h"
 
-#include<mutex>
+#include <mutex>
+
+#include "ORBmatcher.h"
+#include "KeyFrame.h"
+#include "Frame.h"
+#include "Map.h"
 
 namespace ORB_SLAM2
 {

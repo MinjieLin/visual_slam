@@ -19,6 +19,8 @@
 */
 
 #include "MapPublisher.h"
+
+#include "Map.h"
 #include "MapPoint.h"
 #include "KeyFrame.h"
 

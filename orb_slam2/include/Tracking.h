@@ -18,33 +18,17 @@
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef TRACKING_H
 #define TRACKING_H
 
-#include<opencv2/core/core.hpp>
-#include<opencv2/features2d/features2d.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
-#include"FramePublisher.h"
-#include"Map.h"
-#include"LocalMapping.h"
-#include"LoopClosing.h"
-#include"Frame.h"
-#include "ORBVocabulary.h"
-#include"KeyFrameDatabase.h"
-#include"ORBextractor.h"
-#include "Initializer.h"
-#include "MapPublisher.h"
-#include "System.h"
+#include <visual_slam_msgs/Frame.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <tf/transform_broadcaster.h>
 
-#include "visual_slam_msgs/Frame.h"
-
-#include <mutex>
-
-#include "ros/ros.h"
-#include <visual_slam_msgs/TrackingState.h>
-#include "sensor_msgs/CameraInfo.h"
-#include<tf/transform_broadcaster.h>
+#include "Frame.h"
 
 namespace ORB_SLAM2
 {
@@ -55,6 +39,11 @@ class Map;
 class LocalMapping;
 class LoopClosing;
 class System;
+class KeyFrameDatabase;
+class ORBextractor;
+class Initializer;
+class MapPublisher;
+
 
 class Tracking
 {  

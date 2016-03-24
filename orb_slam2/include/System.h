@@ -22,22 +22,15 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include<string>
-#include<thread>
-#include<opencv2/core/core.hpp>
+#include <string>
+#include <thread>
+#include <mutex>
 
-#include "Tracking.h"
-#include "FramePublisher.h"
-#include "MapPublisher.h"
-#include "Map.h"
-#include "LocalMapping.h"
-#include "LoopClosing.h"
-#include "KeyFrameDatabase.h"
+#include <opencv2/core/core.hpp>
+#include <visual_slam_msgs/Frame.h>
+#include <sensor_msgs/CameraInfo.h>
+
 #include "ORBVocabulary.h"
-
-
-#include "visual_slam_msgs/Frame.h"
-#include "sensor_msgs/CameraInfo.h"
 
 namespace ORB_SLAM2
 {
@@ -49,6 +42,8 @@ class Map;
 class Tracking;
 class LocalMapping;
 class LoopClosing;
+class KeyFrameDatabase;
+class MapPublisher;
 
 class System
 {

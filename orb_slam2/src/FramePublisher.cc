@@ -19,14 +19,17 @@
 */
 
 #include "FramePublisher.h"
-#include "Tracking.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include<boost/thread.hpp>
-#include<ros/ros.h>
+#include <boost/thread.hpp>
+#include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
+
+#include "Tracking.h"
+#include "MapPoint.h"
+#include "Map.h"
 
 namespace ORB_SLAM2
 {

@@ -21,20 +21,16 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-#include<vector>
+#include <vector>
 
-#include "MapPoint.h"
+#include <visual_slam_msgs/Frame.h>
+#include <opencv2/opencv.hpp>
+#include <sensor_msgs/CameraInfo.h>
+
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
 #include "ORBVocabulary.h"
-#include "KeyFrame.h"
 #include "ORBextractor.h"
-
-#include "visual_slam_msgs/Frame.h"
-
-#include <opencv2/opencv.hpp>
-#include "sensor_msgs/CameraInfo.h"
-#include "ros/ros.h"
 
 namespace ORB_SLAM2
 {
@@ -114,7 +110,7 @@ public:
         return mpORBextractorLeft->GetInverseScaleSigmaSquares();
     }
 
-    vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel=-1, const int maxLevel=-1) const;
+    std::vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r, const int minLevel=-1, const int maxLevel=-1) const;
 public:
     // Vocabulary used for relocalization.
     ORBVocabulary* mpORBvocabulary;

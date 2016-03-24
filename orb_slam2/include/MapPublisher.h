@@ -21,17 +21,19 @@
 #ifndef MAPPUBLISHER_H
 #define MAPPUBLISHER_H
 
-#include<ros/ros.h>
-#include <visualization_msgs/Marker.h>
-
-#include"Map.h"
-#include"MapPoint.h"
-#include"KeyFrame.h"
-
 #include <boost/thread/mutex.hpp>
+
+#include <ros/ros.h>
+#include <visualization_msgs/Marker.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 namespace ORB_SLAM2
 {
+
+class Map;
+class MapPoint;
+class KeyFrame;
 
 class MapPublisher
 {

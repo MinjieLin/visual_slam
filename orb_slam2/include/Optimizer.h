@@ -21,18 +21,19 @@
 #ifndef OPTIMIZER_H
 #define OPTIMIZER_H
 
-#include "Map.h"
-#include "MapPoint.h"
-#include "KeyFrame.h"
-#include "LoopClosing.h"
-#include "Frame.h"
-
 #include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
+
+#include "LoopClosing.h"
 
 namespace ORB_SLAM2
 {
 
 class LoopClosing;
+class Map;
+class MapPoint;
+class KeyFrame;
+class Frame;
+
 
 class Optimizer
 {

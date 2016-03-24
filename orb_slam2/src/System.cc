@@ -18,12 +18,20 @@
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #include "System.h"
-#include "Converter.h"
+
 #include <thread>
+
 #include <visual_slam_msgs/Frame.h>
+
+#include "Tracking.h"
+#include "FramePublisher.h"
+#include "Map.h"
+#include "Converter.h"
+#include "LocalMapping.h"
+#include "LoopClosing.h"
+#include "KeyFrameDatabase.h"
+#include "MapPublisher.h"
 
 namespace ORB_SLAM2
 {
