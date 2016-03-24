@@ -191,7 +191,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
     f.height = img->height;
     f.width = img->width;
 
-    ROS_INFO("Frame processed");
+//    ROS_INFO("Frame processed");
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
     msg_pub_.publish(f);
     running_threads--;
@@ -245,8 +245,8 @@ void tracker_state_callback(const visual_slam_msgs::TrackingState &msg) {
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "feature_detector");
-    if (ros::names::remap("~image_in") == "~image_in"
-            || ros::names::remap("~camera_info") == "~camera_info") {
+    if (ros::names::remap("~image_in") == "image_in"
+            || ros::names::remap("~camera_info") == "camera_info") {
         ROS_WARN(
                     "Topics 'image_in' and 'camera_info' have not been remapped! Typical command-line usage:\n"
                     "\t$ rosrun image_rotate image_rotate image:=<image topic> [transport] camera_info:=<camera_info topic>");

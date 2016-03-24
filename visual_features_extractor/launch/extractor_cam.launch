@@ -12,18 +12,18 @@
 	</node>
 
 	<node name="feature_extractor" type="feature_detector" pkg="visual_features_extractor" output="screen">
-    <param name="orb_extractor" value="orb_slam2"/>  		
-    <param name="num_features" value="4000"/>
-    <param name="scale_factor" value="1.2f"/>
-    <param name="levels" value="8"/>
-    <param name="ini_thrs" value="20"/>
-    <param name="min_thrs" value="12"/>
+		<param name="orb_extractor" value="orb_slam2"/>  		
+		<param name="num_features" value="4000"/>
+		<param name="scale_factor" value="1.2f"/>
+		<param name="levels" value="8"/>
+		<param name="ini_thrs" value="20"/>
+		<param name="min_thrs" value="12"/>
 
 		<param name="undistort_points" value="true"/>
 		<param name="subscribe_to_state" value="true"/>
 		<param name="publish_image_" value="true"/>		
 		<remap from="~image_in" to="/usb_cam/image_raw"/>
-    <remap from="~image_out" to="~debug"/>
+		<remap from="~image_out" to="~debug"/>
 		<remap from="~camera_info" to="/usb_cam/camera_info"/>
 	</node>
     

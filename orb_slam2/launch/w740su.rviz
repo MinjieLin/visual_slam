@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /Image1
+        - /Marker1
       Splitter Ratio: 0.5
     Tree Height: 540
   - Class: rviz/Selection
@@ -27,13 +28,13 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: Image
 Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /debug
+      Image Topic: /frame
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -44,16 +45,19 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /ORB_SLAM/Map
+      Marker Topic: /slam/map
       Name: Marker
       Namespaces:
-        {}
+        Camera: true
+        Graph: true
+        KeyFrames: true
+        MapPoints: true
       Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
-    Fixed Frame: ORB_SLAM/World
+    Fixed Frame: slam/world
     Frame Rate: 30
   Name: root
   Tools:
@@ -109,5 +113,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 927
-  X: 973
+  X: 943
   Y: 14
