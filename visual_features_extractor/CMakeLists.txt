@@ -27,19 +27,6 @@ generate_dynamic_reconfigure_options(
   cfg/FeatureDetector.cfg
 )
 
-## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   KeyPoint.msg
-   Frame.msg
-)
-
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-)
-
 catkin_package()
 
 include_directories(

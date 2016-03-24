@@ -51,8 +51,8 @@
 #include "opencv2/features2d/features2d.hpp"
 
 #include "visual_features_extractor/FeatureDetectorConfig.h"
-#include "visual_features_extractor/Frame.h"
-#include "visual_features_extractor/KeyPoint.h"
+#include "visual_slam_msgs/Frame.h"
+#include "visual_slam_msgs/KeyPoint.h"
 #include "visual_slam_msgs/TrackingState.h"
 
 boost::asio::io_service ioService;
@@ -162,9 +162,9 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 	}
 
 	// Create msgs
-	visual_features_extractor::Frame f;
+	visual_slam_msgs::Frame f;
 	for (size_t i = 0; i < undistorted_keypoints.size(); i++) {
-		visual_features_extractor::KeyPoint kp;
+		visual_slam_msgs::KeyPoint kp;
 		kp.x = undistorted_keypoints[i].pt.x;
 		kp.y = undistorted_keypoints[i].pt.y;
 		kp.size = undistorted_keypoints[i].size;
@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle("~").param("num_features", num_features_param_, 4000);
 	num_features_ = num_features_param_;
     ROS_INFO("Detecting %d features", num_features_);
-	msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 10);
+	msg_pub_ = nh.advertise<visual_slam_msgs::Frame>("features", 10);
   
     bool subscribe_state_;
 	ros::NodeHandle("~").param("subscribe_to_state", subscribe_state_, false);

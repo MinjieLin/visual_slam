@@ -7,6 +7,7 @@ project(visual_slam_msgs)
 find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
+  geometry_msgs
 )
 
 
@@ -92,14 +93,17 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-   FILES
-   TrackingState.msg
+  FILES
+  TrackingState.msg
+  KeyPoint.msg
+  Frame.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
 DEPENDENCIES
-std_msgs
+  std_msgs
+  geometry_msgs
 )
 
 

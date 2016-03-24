@@ -9,7 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   cmake_modules
   dynamic_reconfigure 
-  visual_features_extractor
   tf
   visual_slam_msgs
 )

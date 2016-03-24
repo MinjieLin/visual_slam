@@ -104,13 +104,13 @@ ORBextractor::ORBextractor(int _nfeatures, float _scaleFactor, int _nlevels,
 
 
 
-void ORBextractor::operator()( InputArray _image, const visual_features_extractor::Frame & f, InputArray _mask, vector<KeyPoint>& _keypoints,
+void ORBextractor::operator()( InputArray _image, const visual_slam_msgs::Frame & f, InputArray _mask, vector<KeyPoint>& _keypoints,
                       OutputArray _descriptors)
 { 
     vector<KeyPoint> keypoints;
     cv::Mat descriptors = cv::Mat(f.keypoints.size(), 32, CV_8UC1);
     int i = 0;
-    for (visual_features_extractor::KeyPoint kp : f.keypoints){
+    for (visual_slam_msgs::KeyPoint kp : f.keypoints){
         cv::KeyPoint cvKp;
         cvKp.pt.x = kp.x;
         cvKp.pt.y = kp.y;

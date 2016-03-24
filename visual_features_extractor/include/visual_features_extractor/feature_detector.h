@@ -18,8 +18,8 @@
 #include <opencv2/features2d/features2d.hpp>
 
 #include "visual_features_extractor/FeatureDetectorConfig.h"
-#include "visual_features_extractor/Frame.h"
-#include "visual_features_extractor/KeyPoint.h"
+#include "visual_slam_msgs/Frame.h"
+#include "visual_slam_msgs/KeyPoint.h"
 #include "visual_slam_msgs/TrackingState.h"
 
 namespace visual_features_extractor

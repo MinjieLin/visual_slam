@@ -30,7 +30,7 @@
 #include "KeyFrame.h"
 #include "ORBextractor.h"
 
-#include "visual_features_extractor/Frame.h"
+#include "visual_slam_msgs/Frame.h"
 
 #include <opencv2/opencv.hpp>
 #include "sensor_msgs/CameraInfo.h"
@@ -54,11 +54,11 @@ public:
 
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const double &timeStamp,
-          const visual_features_extractor::Frame & frame, ORBextractor* extractor,
+          const visual_slam_msgs::Frame & frame, ORBextractor* extractor,
           ORBVocabulary* voc, const float &bf, const float &thDepth);
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
-    void ExtractORB(const cv::Mat &imGray, const visual_features_extractor::Frame & frame);
+    void ExtractORB(const cv::Mat &imGray, const visual_slam_msgs::Frame & frame);
 
     // Compute Bag of Words representation.
     void ComputeBoW();

@@ -56,7 +56,7 @@ Frame::Frame(const Frame &frame)
 }
 
 
-Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const visual_features_extractor::Frame & frame,
+Frame::Frame(const cv::Mat &imGray, const double &timeStamp, const visual_slam_msgs::Frame & frame,
              ORBextractor* extractor,ORBVocabulary* voc, const float &bf,
              const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
@@ -107,7 +107,7 @@ void Frame::AssignFeaturesToGrid()
     }
 }
 
-void Frame::ExtractORB(const cv::Mat &im, const visual_features_extractor::Frame & frame)
+void Frame::ExtractORB(const cv::Mat &im, const visual_slam_msgs::Frame & frame)
 {
     (*mpORBextractorLeft)(im, frame,cv::Mat(),mvKeys,mDescriptors);
 }

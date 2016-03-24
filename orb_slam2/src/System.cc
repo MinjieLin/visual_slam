@@ -24,7 +24,7 @@
 #include "Converter.h"
 #include <thread>
 #include <pangolin/pangolin.h>
-#include <visual_features_extractor/Frame.h>
+#include <visual_slam_msgs/Frame.h>
 
 namespace ORB_SLAM2
 {
@@ -116,7 +116,7 @@ System::System(const string &strVocFile, const sensor_msgs::CameraInfoConstPtr &
     Frame::InitialComputations(cam_info);
 }
 
-cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const visual_features_extractor::Frame & frame)
+cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const visual_slam_msgs::Frame & frame)
 {
     if(mSensor!=MONOCULAR)
     {

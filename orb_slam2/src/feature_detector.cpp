@@ -41,8 +41,8 @@
 #include "opencv2/features2d/features2d.hpp"
 
 #include "visual_features_extractor/FeatureDetectorConfig.h"
-#include "visual_features_extractor/Frame.h"
-#include "visual_features_extractor/KeyPoint.h"
+#include "visual_slam_msgs/Frame.h"
+#include "visual_slam_msgs/KeyPoint.h"
 
 ros::Publisher img_pub_;
 ros::Subscriber img_sub_;
@@ -87,9 +87,9 @@ void proc_img(const sensor_msgs::ImageConstPtr& msg)
     }
 
     // Create msgs
-    visual_features_extractor::Frame f;
+    visual_slam_msgs::Frame f;
     for( size_t i = 0; i< keypoints.size(); i++ ) {
-        visual_features_extractor::KeyPoint kp;
+        visual_slam_msgs::KeyPoint kp;
         kp.x = keypoints[i].pt.x;
         kp.y = keypoints[i].pt.y;
         kp.size = keypoints[i].size;
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
         img_pub_ = nh.advertise<sensor_msgs::Image>("image", 1);
     }
 
-    msg_pub_ = nh.advertise<visual_features_extractor::Frame>("features", 1);
+    msg_pub_ = nh.advertise<visual_slam_msgs::Frame>("features", 1);
 
     img_sub_ = nh.subscribe("image", 3, &proc_img);
 

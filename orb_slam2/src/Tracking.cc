@@ -36,7 +36,7 @@
 #include<iostream>
 #include<mutex>
 
-#include "visual_features_extractor/Frame.h"
+#include "visual_slam_msgs/Frame.h"
 #include "ros/ros.h"
 #include <tf/tf.h>
 
@@ -123,7 +123,7 @@ void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
 //    mpViewer=pViewer;
 //}
 
-cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const visual_features_extractor::Frame & frame)
+cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const visual_slam_msgs::Frame & frame)
 {
     if (im.channels()==1)
     {

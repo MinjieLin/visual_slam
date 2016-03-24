@@ -25,8 +25,8 @@
 #include <list>
 #include <opencv/cv.h>
 
-#include <visual_features_extractor/Frame.h>
-#include <visual_features_extractor/KeyPoint.h>
+#include <visual_slam_msgs/Frame.h>
+#include <visual_slam_msgs/KeyPoint.h>
 
 
 namespace ORB_SLAM2
@@ -59,7 +59,7 @@ public:
     // Compute the ORB features and descriptors on an image.
     // ORB are dispersed on the image using an octree.
     // Mask is ignored in the current implementation.
-    void operator()( cv::InputArray image, const visual_features_extractor::Frame & frame, cv::InputArray mask,
+    void operator()( cv::InputArray image, const visual_slam_msgs::Frame & frame, cv::InputArray mask,
       std::vector<cv::KeyPoint>& keypoints,
       cv::OutputArray descriptors);
 

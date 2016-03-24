@@ -37,7 +37,7 @@
 #include "MapPublisher.h"
 #include "System.h"
 
-#include "visual_features_extractor/Frame.h"
+#include "visual_slam_msgs/Frame.h"
 
 #include <mutex>
 
@@ -65,7 +65,7 @@ public:
              const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
-    cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, const visual_features_extractor::Frame & frame);
+    cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, const visual_slam_msgs::Frame & frame);
 
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);

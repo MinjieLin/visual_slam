@@ -33,7 +33,7 @@
 
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-#include "visual_features_extractor/Frame.h"
+#include "visual_slam_msgs/Frame.h"
 #include "sensor_msgs/CameraInfo.h"
 
 using namespace std;
@@ -45,13 +45,13 @@ ORB_SLAM2::System* mpSLAM;
 ros::Subscriber features_sub;
 ros::Subscriber cam_info_sub;
 message_filters::Subscriber<sensor_msgs::Image > * image_filter_sub;
-message_filters::Subscriber<visual_features_extractor::Frame >  * features_filter_sub;
-message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame > * msg_sync;
+message_filters::Subscriber<visual_slam_msgs::Frame >  * features_filter_sub;
+message_filters::TimeSynchronizer<Image, visual_slam_msgs::Frame > * msg_sync;
 bool debug_view;
 string vocab_path;
 
 void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
-                          const visual_features_extractor::FrameConstPtr & frame)
+                          const visual_slam_msgs::FrameConstPtr & frame)
 {
     // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptr;
@@ -68,7 +68,7 @@ void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
     mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec(), *frame);
 }
 
-void grabFeatures(const visual_features_extractor::FrameConstPtr & frame)
+void grabFeatures(const visual_slam_msgs::FrameConstPtr & frame)
 {
     // If no features, just pass on a blank image. It has heigh rows and width columns
     cv::Mat emptyMat = cv::Mat(frame->height,frame->width, CV_8U);
@@ -94,8 +94,8 @@ void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
     if (debug_view){
         ROS_INFO("Subscribing to images and features");
         image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "image_raw", 10);
-        features_filter_sub = new message_filters::Subscriber<visual_features_extractor::Frame>(nh, "features", 10);
-        msg_sync = new message_filters::TimeSynchronizer<Image, visual_features_extractor::Frame>(*image_filter_sub, *features_filter_sub, 10);
+        features_filter_sub = new message_filters::Subscriber<visual_slam_msgs::Frame>(nh, "features", 10);
+        msg_sync = new message_filters::TimeSynchronizer<Image, visual_slam_msgs::Frame>(*image_filter_sub, *features_filter_sub, 10);
         msg_sync->registerCallback(boost::bind(&grabImageAndFeatures, _1, _2));
     } else {
         ROS_INFO("Subscribing to features only");
