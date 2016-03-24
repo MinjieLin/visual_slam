@@ -20,12 +20,14 @@
 
 #include "Initializer.h"
 
+#include <thread>
+
 #include "Thirdparty/DBoW2/DUtils/Random.h"
 
 #include "Optimizer.h"
 #include "ORBmatcher.h"
+#include "Frame.h"
 
-#include<thread>
 
 namespace ORB_SLAM2
 {

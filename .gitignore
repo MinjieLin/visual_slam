@@ -8,4 +8,6 @@ orb_slam2/Thirdparty/g2o/build/
 orb_slam2/Thirdparty/g2o/lib/
 orb_slam2/Thirdparty/DBoW2/build/
 orb_slam2/Thirdparty/DBoW2/lib/
-
+orb_slam2/CMakeLists.txt.*
+visual_features_extractor/CMakeLists.txt.*
+build*

@@ -21,21 +21,18 @@
 #ifndef LOCALMAPPING_H
 #define LOCALMAPPING_H
 
-#include "KeyFrame.h"
-#include "Map.h"
-#include "LoopClosing.h"
-#include "Tracking.h"
-#include "KeyFrameDatabase.h"
-
 #include <mutex>
+
+#include "KeyFrame.h"
+#include "KeyFrameDatabase.h"
 
 
 namespace ORB_SLAM2
 {
 
 class Tracking;
-class LoopClosing;
 class Map;
+class LoopClosing;
 
 class LocalMapping
 {

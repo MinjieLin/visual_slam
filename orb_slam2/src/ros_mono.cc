@@ -23,18 +23,17 @@
 #include <algorithm>
 #include <fstream>
 #include <chrono>
+
 #include <ros/package.h>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
-
 #include <opencv2/core/core.hpp>
-
-#include "include/System.h"
-
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-#include "visual_slam_msgs/Frame.h"
-#include "sensor_msgs/CameraInfo.h"
+#include <visual_slam_msgs/Frame.h>
+#include <sensor_msgs/CameraInfo.h>
+
+#include "include/System.h"
 
 using namespace std;
 using namespace sensor_msgs;

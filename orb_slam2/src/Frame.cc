@@ -19,10 +19,17 @@
 */
 
 #include "Frame.h"
-#include "Converter.h"
-#include "ORBmatcher.h"
+
 #include <thread>
 #include <ctime>
+
+#include "ros/ros.h"
+
+#include "Converter.h"
+#include "ORBmatcher.h"
+#include "MapPoint.h"
+#include "KeyFrame.h"
+
 
 namespace ORB_SLAM2
 {

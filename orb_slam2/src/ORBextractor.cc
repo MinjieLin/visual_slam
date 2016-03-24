@@ -58,7 +58,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <vector>
 
-
 #include "ORBextractor.h"
 
 
