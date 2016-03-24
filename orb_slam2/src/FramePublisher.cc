@@ -40,6 +40,7 @@ FramePublisher::FramePublisher()
     mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
     mbUpdated = true;
 
+    ros::NodeHandle mNH("~");
     mImagePub = mNH.advertise<sensor_msgs::Image>("frame",10,true);
 
     PublishFrame();

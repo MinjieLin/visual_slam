@@ -65,7 +65,6 @@ protected:
     std::vector<cv::KeyPoint> mvIniKeys;
     std::vector<int> mvIniMatches;
 
-    ros::NodeHandle mNH;
     ros::Publisher mImagePub;
 
     int mState;

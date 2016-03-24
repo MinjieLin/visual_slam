@@ -34,7 +34,7 @@ Visualization Manager:
   Displays:
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /frame
+      Image Topic: /slam/frame
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -90,10 +90,10 @@ Visualization Manager:
         Z: -0.128245
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: -0.154796
+      Pitch: 0.715204
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.69857
+      Yaw: 4.68357
     Saved: ~
 Window Geometry:
   Displays:
@@ -113,5 +113,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 927
-  X: 943
+  X: 933
   Y: 14

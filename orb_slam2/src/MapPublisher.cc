@@ -54,7 +54,9 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     mKeyFrames.ns = KEYFRAMES_NAMESPACE;
     mKeyFrames.id=1;
     mKeyFrames.type = visualization_msgs::Marker::LINE_LIST;
-    mKeyFrames.scale.x=0.005;
+    mKeyFrames.scale.x=0.003;
+    mKeyFrames.scale.y=0.1;
+    mKeyFrames.scale.z=0.1;
     mKeyFrames.pose.orientation.w=1.0;
     mKeyFrames.action=visualization_msgs::Marker::ADD;
 

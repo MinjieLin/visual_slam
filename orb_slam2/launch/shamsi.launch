@@ -7,7 +7,7 @@
                 <param name="scale_factor" value="1.2f"/>
                 <param name="levels" value="8"/>
                 <param name="ini_thrs" value="20"/>
-                <param name="min_thrs" value="12"/>
+                <param name="min_thrs" value="7"/>
                 <param name="undistort_points" value="true"/>
                 <param name="subscribe_to_state" value="true"/>
                 <param name="publish_image_" value="true"/>
