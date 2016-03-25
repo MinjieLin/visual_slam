@@ -59,7 +59,7 @@
 boost::asio::io_service ioService;
 boost::thread_group threadpool;
 boost::asio::io_service::work work(ioService);
-
+int max_threads = 1;
 int running_threads = 0;
 boost::mutex mtx_exc_;
 boost::mutex lock_mtx_;
@@ -202,7 +202,7 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
 
 void img_and_info_callback(const sensor_msgs::ImageConstPtr& img,  const sensor_msgs::CameraInfoConstPtr cam_info){
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
-    while (running_threads >= 4)
+    while (running_threads >= max_threads)
         threads_available_cond.wait(lock);
 
     running_threads++;
@@ -216,7 +216,7 @@ void img_callback(const sensor_msgs::ImageConstPtr& img) {
     const sensor_msgs::CameraInfoConstPtr cam_info;
 
     boost::unique_lock<boost::mutex> lock(lock_mtx_);
-    while (running_threads >= 4)
+    while (running_threads >= max_threads)
         threads_available_cond.wait(lock);
 
     running_threads++;
@@ -296,9 +296,8 @@ int main(int argc, char **argv) {
         ROS_INFO("Undistorting points");
     current_state = visual_slam_msgs::TrackingState::SYSTEM_NOT_READY;
 
-    int max_threads;
     ros::NodeHandle("~").param("max_threads", max_threads, 4);
-    for (int i = 0; i < 4; i ++){
+    for (int i = 0; i < max_threads; i ++){
         threadpool.create_thread(
                     boost::bind(&boost::asio::io_service::run, &ioService)
                     );
