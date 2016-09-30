@@ -119,11 +119,19 @@ MapPublisher::MapPublisher(Map* pMap):mpMap(pMap), mbCameraUpdated(false)
     publisher.publish(mCovisibilityGraph);
     publisher.publish(mKeyFrames);
     publisher.publish(mCurrentCamera);
-    worldscale = 1;
+    world_scale = 1;
 }
 
 void MapPublisher::Refresh()
 {
+    // Calculate Scale and Translation Based on KeyFrames
+    vector<KeyFrame*> vKeyFrames = mpMap->GetAllKeyFrames();
+    world_translation = calcWorldTranslation(vKeyFrames);
+    world_scale = calcWorldScale(vKeyFrames, 2, 2);
+
+    PublishKeyFrames(vKeyFrames);
+
+
     if(isCamUpdated())
     {
        cv::Mat Tcw = GetCurrentCameraPose();
@@ -131,25 +139,16 @@ void MapPublisher::Refresh()
        ResetCamFlag();
     }
 
-//    if(mpMap->isMapUpdated())
-//    {
-        vector<KeyFrame*> vKeyFrames = mpMap->GetAllKeyFrames();
-        worldscale = calcWorldScale(vKeyFrames, 1, 1);
-        worldtranslation = calcWorldTranslation(vKeyFrames);
-        PublishKeyFrames(vKeyFrames);
+    ros::NodeHandle nh("~");
+    bool debug_view;
+    nh.param("debug_view", debug_view, true);
 
-        ros::NodeHandle nh("~");
-        bool debug_view;
-        nh.param("debug_view", debug_view, true);
-
-        if(debug_view)
-        {
-            vector<MapPoint*> vMapPoints = mpMap->GetAllMapPoints();
-            vector<MapPoint*> vRefMapPoints = mpMap->GetReferenceMapPoints();
-            PublishMapPoints(vMapPoints, vRefMapPoints);
-        }
-//        mpMap->ResetUpdated();
-//    }
+    if(debug_view)
+    {
+        vector<MapPoint*> vMapPoints = mpMap->GetAllMapPoints();
+        vector<MapPoint*> vRefMapPoints = mpMap->GetReferenceMapPoints();
+        PublishMapPoints(vMapPoints, vRefMapPoints);
+    }
 }
 
 void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector<MapPoint*> &vpRefMPs)
@@ -165,9 +164,9 @@ void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector
             continue;
         geometry_msgs::Point p;
         cv::Mat pos = vpMPs[i]->GetWorldPos();
-        p.x=pos.at<float>(0)*worldscale;
-        p.y=pos.at<float>(1)*worldscale;
-        p.z=pos.at<float>(2)*worldscale;
+        p.x=pos.at<float>(0) + world_translation.x;
+        p.y=pos.at<float>(1) + world_translation.y;
+        p.z=pos.at<float>(2) + world_translation.z;
 
         mPoints.points.push_back(p);
     }
@@ -178,9 +177,9 @@ void MapPublisher::PublishMapPoints(const vector<MapPoint*> &vpMPs, const vector
             continue;
         geometry_msgs::Point p;
         cv::Mat pos = (*sit)->GetWorldPos();
-        p.x=pos.at<float>(0)*worldscale;
-        p.y=pos.at<float>(1)*worldscale;
-        p.z=pos.at<float>(2)*worldscale;
+        p.x=pos.at<float>(0) + world_translation.x;
+        p.y=pos.at<float>(1) + world_translation.y;
+        p.z=pos.at<float>(2) + world_translation.z;
 
         mReferencePoints.points.push_back(p);
     }
@@ -210,7 +209,6 @@ void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)
     {
         cv::Mat Tcw = vpKFs[i]->GetPose();
         cv::Mat Twc = Tcw.inv();
-        //Twc *= worldscale;
         cv::Mat ow = Twc*o;
         cv::Mat p1w = Twc*p1;
         cv::Mat p2w = Twc*p2;
@@ -218,21 +216,21 @@ void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)
         cv::Mat p4w = Twc*p4;
 
         geometry_msgs::Point msgs_o,msgs_p1, msgs_p2, msgs_p3, msgs_p4;
-        msgs_o.x=ow.at<float>(0) + worldtranslation.x;
-        msgs_o.y=ow.at<float>(1) + worldtranslation.y;
-        msgs_o.z=ow.at<float>(2) + worldtranslation.z;
-        msgs_p1.x=p1w.at<float>(0) + worldtranslation.x;
-        msgs_p1.y=p1w.at<float>(1) + worldtranslation.y;
-        msgs_p1.z=p1w.at<float>(2) + worldtranslation.z;
-        msgs_p2.x=p2w.at<float>(0) + worldtranslation.x;
-        msgs_p2.y=p2w.at<float>(1) + worldtranslation.y;
-        msgs_p2.z=p2w.at<float>(2) + worldtranslation.z;
-        msgs_p3.x=p3w.at<float>(0) + worldtranslation.x;
-        msgs_p3.y=p3w.at<float>(1) + worldtranslation.y;
-        msgs_p3.z=p3w.at<float>(2) + worldtranslation.z;
-        msgs_p4.x=p4w.at<float>(0) + worldtranslation.x;
-        msgs_p4.y=p4w.at<float>(1) + worldtranslation.y;
-        msgs_p4.z=p4w.at<float>(2) + worldtranslation.z;
+        msgs_o.x=(ow.at<float>(0) + world_translation.x) * world_scale;
+        msgs_o.y=(ow.at<float>(1) + world_translation.y) * world_scale;
+        msgs_o.z=(ow.at<float>(2) + world_translation.z) * world_scale;
+        msgs_p1.x=(p1w.at<float>(0) + world_translation.x) * world_scale;
+        msgs_p1.y=(p1w.at<float>(1) + world_translation.y) * world_scale;
+        msgs_p1.z=(p1w.at<float>(2) + world_translation.z) * world_scale;
+        msgs_p2.x=(p2w.at<float>(0) + world_translation.x) * world_scale;
+        msgs_p2.y=(p2w.at<float>(1) + world_translation.y) * world_scale;
+        msgs_p2.z=(p2w.at<float>(2) + world_translation.z) * world_scale;
+        msgs_p3.x=(p3w.at<float>(0) + world_translation.x) * world_scale;
+        msgs_p3.y=(p3w.at<float>(1) + world_translation.y) * world_scale;
+        msgs_p3.z=(p3w.at<float>(2) + world_translation.z) * world_scale;
+        msgs_p4.x=(p4w.at<float>(0) + world_translation.x) * world_scale;
+        msgs_p4.y=(p4w.at<float>(1) + world_translation.y) * world_scale;
+        msgs_p4.z=(p4w.at<float>(2) + world_translation.z) * world_scale;
 
         mKeyFrames.points.push_back(msgs_o);
         mKeyFrames.points.push_back(msgs_p1);
@@ -261,9 +259,9 @@ void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)
                     continue;
                 cv::Mat Ow2 = (*vit)->GetCameraCenter();
                 geometry_msgs::Point msgs_o2;
-                msgs_o2.x=Ow2.at<float>(0)*worldscale;
-                msgs_o2.y=Ow2.at<float>(1)*worldscale;
-                msgs_o2.z=Ow2.at<float>(2)*worldscale;
+                msgs_o2.x=(Ow2.at<float>(0)+world_translation.x)*world_scale;
+                msgs_o2.y=(Ow2.at<float>(1)+world_translation.y)*world_scale;
+                msgs_o2.z=(Ow2.at<float>(2)+world_translation.z)*world_scale;
                 mCovisibilityGraph.points.push_back(msgs_o);
                 mCovisibilityGraph.points.push_back(msgs_o2);
             }
@@ -275,9 +273,9 @@ void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)
         {
             cv::Mat Owp = pParent->GetCameraCenter();
             geometry_msgs::Point msgs_op;
-            msgs_op.x=Owp.at<float>(0)*worldscale;
-            msgs_op.y=Owp.at<float>(1)*worldscale;
-            msgs_op.z=Owp.at<float>(2)*worldscale;
+            msgs_op.x=(Owp.at<float>(0)+world_translation.x)*world_scale;
+            msgs_op.y=(Owp.at<float>(1)+world_translation.y)*world_scale;
+            msgs_op.z=(Owp.at<float>(2)+world_translation.z)*world_scale;
             mMST.points.push_back(msgs_o);
             mMST.points.push_back(msgs_op);
         }
@@ -288,9 +286,9 @@ void MapPublisher::PublishKeyFrames(const vector<KeyFrame*> &vpKFs)
                 continue;
             cv::Mat Owl = (*sit)->GetCameraCenter();
             geometry_msgs::Point msgs_ol;
-            msgs_ol.x=Owl.at<float>(0)*worldscale;
-            msgs_ol.y=Owl.at<float>(1)*worldscale;
-            msgs_ol.z=Owl.at<float>(2)*worldscale;
+            msgs_ol.x=(Owl.at<float>(0)+world_translation.x)*world_scale;
+            msgs_ol.y=(Owl.at<float>(1)+world_translation.y)*world_scale;
+            msgs_ol.z=(Owl.at<float>(2)+world_translation.z)*world_scale;
             mMST.points.push_back(msgs_o);
             mMST.points.push_back(msgs_ol);
         }
@@ -327,21 +325,21 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
     cv::Mat p4w = Twc*p4;
 
     geometry_msgs::Point msgs_o,msgs_p1, msgs_p2, msgs_p3, msgs_p4;
-    msgs_o.x=ow.at<float>(0) + worldtranslation.x;
-    msgs_o.y=ow.at<float>(1) + worldtranslation.y;
-    msgs_o.z=ow.at<float>(2) + worldtranslation.z;
-    msgs_p1.x=p1w.at<float>(0) + worldtranslation.x;
-    msgs_p1.y=p1w.at<float>(1) + worldtranslation.y;
-    msgs_p1.z=p1w.at<float>(2) + worldtranslation.z;
-    msgs_p2.x=p2w.at<float>(0) + worldtranslation.x;
-    msgs_p2.y=p2w.at<float>(1) + worldtranslation.y;
-    msgs_p2.z=p2w.at<float>(2) + worldtranslation.z;
-    msgs_p3.x=p3w.at<float>(0) + worldtranslation.x;
-    msgs_p3.y=p3w.at<float>(1) + worldtranslation.y;
-    msgs_p3.z=p3w.at<float>(2) + worldtranslation.z;
-    msgs_p4.x=p4w.at<float>(0) + worldtranslation.x;
-    msgs_p4.y=p4w.at<float>(1) + worldtranslation.y;
-    msgs_p4.z=p4w.at<float>(2) + worldtranslation.z;
+    msgs_o.x=(ow.at<float>(0) + world_translation.x) * world_scale;
+    msgs_o.y=(ow.at<float>(1) + world_translation.y) * world_scale;
+    msgs_o.z=(ow.at<float>(2) + world_translation.z) * world_scale;
+    msgs_p1.x=(p1w.at<float>(0) + world_translation.x) * world_scale;
+    msgs_p1.y=(p1w.at<float>(1) + world_translation.y) * world_scale;
+    msgs_p1.z=(p1w.at<float>(2) + world_translation.z) * world_scale;
+    msgs_p2.x=(p2w.at<float>(0) + world_translation.x) * world_scale;
+    msgs_p2.y=(p2w.at<float>(1) + world_translation.y) * world_scale;
+    msgs_p2.z=(p2w.at<float>(2) + world_translation.z) * world_scale;
+    msgs_p3.x=(p3w.at<float>(0) + world_translation.x) * world_scale;
+    msgs_p3.y=(p3w.at<float>(1) + world_translation.y) * world_scale;
+    msgs_p3.z=(p3w.at<float>(2) + world_translation.z) * world_scale;
+    msgs_p4.x=(p4w.at<float>(0) + world_translation.x) * world_scale;
+    msgs_p4.y=(p4w.at<float>(1) + world_translation.y) * world_scale;
+    msgs_p4.z=(p4w.at<float>(2) + world_translation.z) * world_scale;
 
     mCurrentCamera.points.push_back(msgs_o);
     mCurrentCamera.points.push_back(msgs_p1);
@@ -396,11 +394,12 @@ float MapPublisher::calcWorldScale(vector<KeyFrame*>& kf, float x, float z)
     float max_dist = 0;
     for(KeyFrame* kf_A : kf)
     {
-        if(kf_A->isBad()) continue;
-
         for(KeyFrame* kf_B : kf)
         {
-            if(kf_B->isBad()) continue;
+            // Sometimes the first pose is always at <1.0,0.0,0.0>
+            if(kf_A->GetCameraCenter().at<float>(0) == 1.0
+            || kf_B->GetCameraCenter().at<float>(0) == 1.0)
+                continue;
 
             float delta_x = kf_A->GetCameraCenter().at<float>(0)
                             - kf_B->GetCameraCenter().at<float>(0);
@@ -422,33 +421,31 @@ float MapPublisher::calcWorldScale(vector<KeyFrame*>& kf, float x, float z)
 geometry_msgs::Point MapPublisher::calcWorldTranslation(std::vector<KeyFrame*>& kfs)
 {
     float maxx=0, minx=0, maxz=0, minz=0;
-
-    for(KeyFrame* kf : kfs)
+    if(kfs.size() > 0)
     {
-        if(kf->isBad()) continue;
-
-        maxx = minx = kf->GetPose().at<float>(0);
-        maxz = minz = kf->GetPose().at<float>(2);
+        maxx = minx = kfs[1]->GetCameraCenter().at<float>(0);
+        maxz = minz = kfs[1]->GetCameraCenter().at<float>(2);
     }
 
     for(KeyFrame* kf : kfs)
     {
-        if(kf->isBad()) continue;
+        if(kf->GetCameraCenter().at<float>(0) == 1)
+            continue;
 
-        if(kf->GetPose().at<float>(0) > maxx)
-            maxx = kf->GetPose().at<float>(0);
-        if(kf->GetPose().at<float>(0) < minx)
-            minx = kf->GetPose().at<float>(0);
-        if(kf->GetPose().at<float>(2) > maxz)
-            maxz = kf->GetPose().at<float>(2);
-        if(kf->GetPose().at<float>(2) < minz)
-            minz = kf->GetPose().at<float>(2);
+        if(kf->GetCameraCenter().at<float>(0) > maxx)
+            maxx = kf->GetCameraCenter().at<float>(0);
+        if(kf->GetCameraCenter().at<float>(0) < minx)
+            minx = kf->GetCameraCenter().at<float>(0);
+        if(kf->GetCameraCenter().at<float>(2) > maxz)
+            maxz = kf->GetCameraCenter().at<float>(2);
+        if(kf->GetCameraCenter().at<float>(2) < minz)
+            minz = kf->GetCameraCenter().at<float>(2);
     }
 
     geometry_msgs::Point translation;
-    translation.x = -(maxx-minx)/2.0;
+    translation.x = -(fabs(maxx)-fabs(minx))/2.0;
     translation.y = 0;
-    translation.z = -(maxz-minz)/2.0;
+    translation.z = -(fabs(maxz)-fabs(minz))/2.0;
 
     return translation;
 }

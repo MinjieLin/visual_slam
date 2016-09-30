@@ -6,7 +6,7 @@
 		<param name="num_features" value="4000"/>
 		<param name="scale_factor" value="1.2f"/>
 		<param name="levels" value="8"/>
-		<param name="ini_thrs" value="20"/>
+		<param name="ini_thrs" value="7"/>
 		<param name="min_thrs" value="7"/>
 		<param name="~max_threads" value="16"/>
 
