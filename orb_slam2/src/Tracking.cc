@@ -47,7 +47,7 @@
 #include <ros/ros.h>
 #include <visual_slam_msgs/TrackingState.h>
 #include <tf/tf.h>
-
+#include "getTimeMs64.h"
 
 using namespace std;
 
@@ -109,6 +109,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FramePublisher *pFramePubl
     cout << "- Scale Factor: " << fScaleFactor << endl;
     cout << "- Initial Fast Threshold: " << fIniThFAST << endl;
     cout << "- Minimum Fast Threshold: " << fMinThFAST << endl;
+    cout << "- Max FPS: " << mMaxFrames << endl;
 
     state_pub = nh.advertise<visual_slam_msgs::TrackingState>("tracking_state", 1);
 
@@ -411,7 +412,7 @@ void Tracking::Track()
         {
             if(mpMap->KeyFramesInMap()<=5)
             {
-                cout << "Track lost soon after initialisation, reseting..." << endl;
+                ROS_INFO("Track lost soon after initialisation, reseting...");
                 mpSystem->Reset();
                 return;
             }
@@ -445,6 +446,9 @@ void Tracking::Track()
 
 void Tracking::MonocularInitialization()
 {
+    // Start Timer
+//    uint64 start = GetTimeMs64();
+
     if(!mpInitializer)
     {
         // Set Reference Frame
@@ -514,6 +518,10 @@ void Tracking::MonocularInitialization()
             CreateInitialMapMonocular();
         }
     }
+
+    // End Timer
+//    uint64 end = GetTimeMs64();
+//    ROS_INFO("Tracking::MonocularInitialization: %dms", (int)(end-start));
 }
 
 void Tracking::CreateInitialMapMonocular()
@@ -521,7 +529,6 @@ void Tracking::CreateInitialMapMonocular()
     // Create KeyFrames
     KeyFrame* pKFini = new KeyFrame(mInitialFrame,mpMap,mpKeyFrameDB);
     KeyFrame* pKFcur = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
-
 
     pKFini->ComputeBoW();
     pKFcur->ComputeBoW();
@@ -616,6 +623,7 @@ void Tracking::CreateInitialMapMonocular()
     mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
     mState=OK;
+    ROS_INFO("INITIALIZED");
 }
 
 void Tracking::CheckReplacedInLastFrame()

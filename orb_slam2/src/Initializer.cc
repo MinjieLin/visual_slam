@@ -28,6 +28,8 @@
 #include "ORBmatcher.h"
 #include "Frame.h"
 
+#include "getTimeMs64.h"
+#include "ros/ros.h"
 
 namespace ORB_SLAM2
 {
@@ -125,6 +127,9 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
 
 void Initializer::FindHomography(vector<bool> &vbMatchesInliers, float &score, cv::Mat &H21)
 {
+    // Start Timer
+//    uint64 start = GetTimeMs64();
+
     // Number of putative matches
     const int N = mvMatches12.size();
 
@@ -171,11 +176,18 @@ void Initializer::FindHomography(vector<bool> &vbMatchesInliers, float &score, c
             score = currentScore;
         }
     }
+
+    // End Timer
+//    uint64 end = GetTimeMs64();
+//    ROS_INFO("FindHomography: %dms", (int)(end-start));
 }
 
 
 void Initializer::FindFundamental(vector<bool> &vbMatchesInliers, float &score, cv::Mat &F21)
 {
+    // Start Timer
+//    uint64 start = GetTimeMs64();
+
     // Number of putative matches
     const int N = vbMatchesInliers.size();
 
@@ -222,6 +234,10 @@ void Initializer::FindFundamental(vector<bool> &vbMatchesInliers, float &score, 
             score = currentScore;
         }
     }
+
+    // End Timer
+//    uint64 end = GetTimeMs64();
+//    ROS_INFO("FindFundamental: %dms", (int)(end-start));
 }
 
 

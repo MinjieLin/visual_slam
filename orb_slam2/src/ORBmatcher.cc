@@ -32,6 +32,9 @@
 #include "Frame.h"
 #include "KeyFrame.h"
 
+#include "ros/ros.h"
+#include "getTimeMs64.h"
+
 using namespace std;
 
 namespace ORB_SLAM2
@@ -47,7 +50,9 @@ ORBmatcher::ORBmatcher(float nnratio, bool checkOri): mfNNratio(nnratio), mbChec
 
 int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoints, const float th)
 {
-    //time_t start = clock();
+    // Start Timer
+//    uint64 start = GetTimeMs64();
+
     int nmatches=0;
 
     const bool bFactor = th!=1.0;
@@ -139,7 +144,10 @@ int ORBmatcher::SearchByProjection(Frame &F, const vector<MapPoint*> &vpMapPoint
             }
         }
     }
-    //ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
+
+    // End Timer
+//    uint64 end = GetTimeMs64();
+//    ROS_INFO("ORBmatcher::SearchByProjection: %dms", (int)(end-start));
     return nmatches;
 }
 
@@ -422,7 +430,9 @@ int ORBmatcher::SearchByProjection(KeyFrame* pKF, cv::Mat Scw, const vector<MapP
 
 int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector<cv::Point2f> &vbPrevMatched, vector<int> &vnMatches12, const int windowSize)
 {
-    //time_t start = clock();
+    // Start Timer
+//    uint64 start = GetTimeMs64();
+
     int nmatches=0;
     vnMatches12 = vector<int>(F1.mvKeysUn.size(),-1);
 
@@ -526,7 +536,10 @@ int ORBmatcher::SearchForInitialization(const Frame &F1, const Frame &F2, vector
             }
         }
     }
-    //ROS_INFO("Time: %d", (int)((clock()-start)*1000/CLOCKS_PER_SEC));
+
+    // End Timer
+//    uint64 end = GetTimeMs64();
+//    ROS_INFO("ORBmatcher::SearchForInitialization: %dms", (int)(end-start));
 
     if(mbCheckOrientation)
     {
