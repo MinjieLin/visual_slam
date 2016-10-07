@@ -24,10 +24,8 @@
 #include "MapPoint.h"
 #include "KeyFrame.h"
 
-#include "tf/Transform.h"
-#include "tf/Matrix3x3.h"
-#include "tf/Vector3.h"
-#include "tf/transform_datatypes.h"
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
 
 namespace ORB_SLAM2
 {
@@ -314,18 +312,17 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
 
     cv::Mat Twc = Tcw.inv();
 
-    cv::Mat rotCv = img(cv::Range(0, 2), cv::Range(0, 2));
-    cv::Mat transCv = img(cv::Range(0, 2), cv::Range(3,3));
+    cv::Mat rotCv = Tcw(cv::Range(0, 2), cv::Range(0, 2));
+    cv::Mat transCv = Tcw(cv::Range(0, 2), cv::Range(3,3));
 
     tf::Matrix3x3 rot(rotCv.at<float>(0),rotCv.at<float>(1),rotCv.at<float>(2),
         rotCv.at<float>(3),rotCv.at<float>(4),rotCv.at<float>(5),
         rotCv.at<float>(6),rotCv.at<float>(6),rotCv.at<float>(8));
-    tf::Vector3 trans(transCv.at<float>(0) + world_translation.x,
-        transCv.at<float>(1) + world_translation.y,
-        transCv.at<float>(2) + world_translation.z);
+    tf::Vector3 trans((transCv.at<float>(0) + world_translation.x) * world_scale,
+        (transCv.at<float>(1) + world_translation.y) * world_scale,
+        (transCv.at<float>(2) + world_translation.z) * world_scale);
 
     tf::Transform t(rot, trans);
-    t = t * world_scale;
 
     float d = fCameraSize;
 
@@ -337,21 +334,21 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
     cv::Mat p4 = (cv::Mat_<float>(4,1) << -d, d*0.8, d*0.5, 1);
 
     geometry_msgs::Point msgs_o,msgs_p1, msgs_p2, msgs_p3, msgs_p4;
-    msgs_o.x=o.at<float>(0) 
-    msgs_o.y=(ow.at<float>(1);
-    msgs_o.z=(ow.at<float>(2);
-    msgs_p1.x=(p1w.at<float>(0);
-    msgs_p1.y=(p1w.at<float>(1);
-    msgs_p1.z=(p1w.at<float>(2);
-    msgs_p2.x=(p2w.at<float>(0);
-    msgs_p2.y=(p2w.at<float>(1);
-    msgs_p2.z=(p2w.at<float>(2);
-    msgs_p3.x=(p3w.at<float>(0);
-    msgs_p3.y=(p3w.at<float>(1);
-    msgs_p3.z=(p3w.at<float>(2);
-    msgs_p4.x=(p4w.at<float>(0);
-    msgs_p4.y=(p4w.at<float>(1);
-    msgs_p4.z=(p4w.at<float>(2);
+    msgs_o.x=o.at<float>(0);
+    msgs_o.y=o.at<float>(1);
+    msgs_o.z=o.at<float>(2);
+    msgs_p1.x=p1.at<float>(0);
+    msgs_p1.y=p1.at<float>(1);
+    msgs_p1.z=p1.at<float>(2);
+    msgs_p2.x=p2.at<float>(0);
+    msgs_p2.y=p2.at<float>(1);
+    msgs_p2.z=p2.at<float>(2);
+    msgs_p3.x=p3.at<float>(0);
+    msgs_p3.y=p3.at<float>(1);
+    msgs_p3.z=p3.at<float>(2);
+    msgs_p4.x=p4.at<float>(0);
+    msgs_p4.y=p4.at<float>(1);
+    msgs_p4.z=p4.at<float>(2);
 
     mCurrentCamera.points.push_back(msgs_o);
     mCurrentCamera.points.push_back(msgs_p1);
