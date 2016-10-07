@@ -322,7 +322,7 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
 
     tf::Transform t(rot, trans);
 
-    mTfBr.sendTransform(tf::StampedTransform(t,ros::Time::now(), "slam/world", "usb_cam"));
+    mTfBr.sendTransform(tf::StampedTransform(t.inverse(),ros::Time::now(), "usb_cam", "slam/world"));
 
     float d = fCameraSize;
 
@@ -368,6 +368,7 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
     mCurrentCamera.points.push_back(msgs_p1);
 
     mCurrentCamera.header.stamp = ros::Time::now();
+    
     tf::poseTFToMsg(t, mCurrentCamera.pose);
 
     publisher.publish(mCurrentCamera);
