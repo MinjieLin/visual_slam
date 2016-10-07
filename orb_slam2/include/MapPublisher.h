@@ -28,6 +28,7 @@
 #include <visualization_msgs/Marker.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#include <tf/transform_broadcaster.h>
 
 namespace ORB_SLAM2
 {
@@ -81,6 +82,9 @@ private:
     bool mbCameraUpdated;
 
     boost::mutex mMutexCamera;
+
+    tf::TransformBroadcaster mTfBr;
+
 };
 
 } //namespace ORB_SLAM2

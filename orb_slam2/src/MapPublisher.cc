@@ -322,6 +322,8 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
 
     tf::Transform t(rot, trans);
 
+    mTfBr.sendTransform(tf::StampedTransform(t,ros::Time::now(), "slam/world", "slam/camera_scaled"));
+
     float d = fCameraSize;
 
     // Camera is a pyramid. Define in camera coordinate system
