@@ -322,7 +322,7 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
 
     tf::Transform t(rot, trans);
 
-    mTfBr.sendTransform(tf::StampedTransform(t,ros::Time::now(), "slam/world", "slam/camera_scaled"));
+    mTfBr.sendTransform(tf::StampedTransform(t,ros::Time::now(), "slam/world", "usb_cam"));
 
     float d = fCameraSize;
 
