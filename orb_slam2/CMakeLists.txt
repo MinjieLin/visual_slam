@@ -105,7 +105,7 @@ target_link_libraries(${PROJECT_NAME}
 	${DBoW2_LIB}
   	${G2O_LIB}
 )
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
 #install(TARGETS ${PROJECT_NAME}
 #        DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
