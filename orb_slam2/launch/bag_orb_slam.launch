@@ -1,40 +1,18 @@
 <launch>
 	<arg name="bag"/>
 
-	<node name="feature_extractor" type="feature_detector" pkg="visual_features_extractor" output="screen">
-		<param name="orb_extractor" value="orb_slam2"/>  		
-		<param name="num_features" value="4000"/>
-		<param name="scale_factor" value="1.2f"/>
-		<param name="levels" value="8"/>
-		<param name="ini_thrs" value="7"/>
-		<param name="min_thrs" value="7"/>
-		<param name="~max_threads" value="16"/>
+  	<include file="$(find visual_features_extractor)/launch/extractor.launch"/>
 
-		<param name="undistort_points" value="true"/>
-		<param name="subscribe_to_state" value="true"/>
-		<param name="publish_image_" value="false"/>		
-		<remap from="~image_in" to="/usb_cam/image_raw"/>
-		<remap from="~image_out" to="~debug"/>
-		<remap from="~camera_info" to="/usb_cam/camera_info"/>
-	</node> 
-
-    <!--node pkg="orb_slam2" type="ros_mono" name="slam" output="screen" launch-prefix="nice -10 ">
-      <param name="~debug_view" value="false"/>
+    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen" launch-prefix="nice -10 ">
+      <param name="~debug_view" value="true"/>
       <param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
       <param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
-      <param name="~fps" value="15"/>
-      <remap from="~camera_info" to="/usb_cam/camera_info"/>
-      <remap from="~image_raw" to="/usb_cam/image_raw"/>
+      <param name="~fps" value="10"/>
       <remap from="~features" to="/feature_extractor/features"/>
-    </node-->
-    
-     <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bag) --loop --topics /usb_cam/camera_info /usb_cam/image_raw" />
+    </node> 
 
-	
-	<!--node pkg="image_view" type="image_view" name="image_view" output="screen">
-		<remap from="image" to="/usb_cam/image_raw"/>
-	</node-->
+	<node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg bag) --loop --topics /usb_cam/camera_info /usb_cam/image_raw" />
 
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find orb_slam2)/launch/orb_slam2.rviz" output="log"></node>
-    
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find orb_slam2)/launch/orb_slam2.rviz" output="log"></node>
+
 </launch>
