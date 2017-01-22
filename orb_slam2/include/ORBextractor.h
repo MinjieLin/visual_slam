@@ -112,7 +112,7 @@ protected:
     std::vector<float> mvInvLevelSigma2;
 
     // Migration code
-    cv::ORB * ORB_detector_;
+    //cv::ORB * ORB_detector_;
 };
 
 } //namespace ORB_SLAM

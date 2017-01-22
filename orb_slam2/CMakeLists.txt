@@ -46,7 +46,7 @@ ENDIF()
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 LIST(APPEND CMAKE_MODULE_PATH /home/biorob/Pangolin/build/src/CMakeFiles/)
 
-find_package(OpenCV 2.4.3 REQUIRED)
+#find_package(OpenCV 2.4.3 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin)
 find_package(Boost REQUIRED COMPONENTS signals thread)
@@ -60,6 +60,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/
   ${catkin_INCLUDE_DIRS} 
   ${OpenCV_INCLUDE_DIRS}
+  Thirdparty/g2o/
+  Thirdparty/g2o/build/
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -69,8 +71,8 @@ add_library(${PROJECT_NAME} SHARED
     src/Tracking.cc
     src/LocalMapping.cc
     src/LoopClosing.cc
-    src/ORBextractor.cc
     src/ORBmatcher.cc
+    src/ORBextractor.cc
     src/Converter.cc
     src/MapPoint.cc
     src/KeyFrame.cc
@@ -100,7 +102,7 @@ target_link_libraries(${PROJECT_NAME}
 	${Pangolin_LIBRARIES}
 	${EIGEN3_LIBS}
 	${DBoW2_LIB}
-  ${G2O_LIB}
+  	${G2O_LIB}
 )
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
 #install(TARGETS ${PROJECT_NAME}

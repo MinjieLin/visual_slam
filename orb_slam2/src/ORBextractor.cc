@@ -98,7 +98,7 @@ ORBextractor::ORBextractor(int _nfeatures, float _scaleFactor, int _nlevels,
 //    mvImagePyramid.resize(_nlevels);
 
     // Migration
-    ORB_detector_ = new cv::ORB(_nfeatures, _scaleFactor, _nlevels, _iniThFAST);
+    //ORB_detector_ = new cv::ORB(_nfeatures, _scaleFactor, _nlevels, _iniThFAST);
 }
 
 
