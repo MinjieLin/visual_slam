@@ -70,7 +70,7 @@ void grabImageAndFeatures(const sensor_msgs::ImageConstPtr& image,
 
 void grabFeatures(const visual_slam_msgs::FrameConstPtr & frame)
 {
-		//ROS_INFO("Reveived frame with info");
+    //ROS_INFO("Reveived frame with info");
     // If no features, just pass on a blank image. It has heigh rows and width columns
     cv::Mat emptyMat = cv::Mat(frame->height,frame->width, CV_8U);
     // Fill it with black
@@ -88,19 +88,17 @@ void grab_cam_info_and_setup(const sensor_msgs::CameraInfoConstPtr & cam_info){
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     mpSLAM = new ORB_SLAM2::System(vocab_path, cam_info,ORB_SLAM2::System::MONOCULAR,true);
 
-    ROS_INFO("SLAM Initialized");
-
-
+    ROS_INFO("SLAM Started");
 
     if (debug_view){
         ROS_INFO("Subscribing to images and features");
-        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "image_raw", 10);
+        image_filter_sub = new message_filters::Subscriber<sensor_msgs::Image>(nh, "/usb_cam/image_raw", 10);
         features_filter_sub = new message_filters::Subscriber<visual_slam_msgs::Frame>(nh, "features", 10);
         msg_sync = new message_filters::TimeSynchronizer<Image, visual_slam_msgs::Frame>(*image_filter_sub, *features_filter_sub, 10);
         msg_sync->registerCallback(boost::bind(&grabImageAndFeatures, _1, _2));
     } else {
         ROS_INFO("Subscribing to features only");
-        features_sub = nh.subscribe("features", 10, &grabFeatures);
+        features_sub = nh.subscribe("/feature_extractor/features", 10, &grabFeatures);
     }
 
     cam_info_sub.shutdown();
@@ -113,7 +111,7 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh("~");
 
-    nh.param("debug_view", debug_view, true);
+    nh.param("debug_view", debug_view, false);
 
     if (!nh.getParam("vocabulary_path",vocab_path))
     {
@@ -121,7 +119,7 @@ int main(int argc, char **argv)
         ROS_INFO("Vocabulary Path Not Provided. Using %s", vocab_path.c_str());
     }
 
-    cam_info_sub = nh.subscribe("camera_info", 1, &grab_cam_info_and_setup);
+    cam_info_sub = nh.subscribe("/usb_cam/camera_info", 1, &grab_cam_info_and_setup);
 
     ROS_INFO("Waiting for camera parameters to initialize SLAM");
 

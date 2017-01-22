@@ -85,6 +85,7 @@ add_library(${PROJECT_NAME} SHARED
     src/Initializer.cc
     src/FramePublisher.cc
     src/MapPublisher.cc
+    src/getTimeMs64.cc
 )
 
 

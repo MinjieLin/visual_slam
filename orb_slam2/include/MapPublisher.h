@@ -24,9 +24,11 @@
 #include <boost/thread/mutex.hpp>
 
 #include <ros/ros.h>
+#include <math.h>
 #include <visualization_msgs/Marker.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#include <tf/transform_broadcaster.h>
 
 namespace ORB_SLAM2
 {
@@ -39,14 +41,12 @@ class MapPublisher
 {
 public:
     MapPublisher(Map* pMap);
-
-
     Map* mpMap;
 
     void Refresh();
     void PublishMapPoints(const std::vector<MapPoint*> &vpMPs, const std::vector<MapPoint*> &vpRefMPs);
     void PublishKeyFrames(const std::vector<KeyFrame*> &vpKFs);
-    void PublishCurrentCamera(const cv::Mat &Tcw);
+    void PublishCurrentCamera(cv::Mat &Tcw);
     void SetCurrentCameraPose(const cv::Mat &Tcw);
 
 private:
@@ -54,6 +54,14 @@ private:
     cv::Mat GetCurrentCameraPose();
     bool isCamUpdated();
     void ResetCamFlag();
+
+    // Calculates a scale for the published map to fit within the
+    // input x and z lengths.
+    float calcWorldScale(std::vector<KeyFrame*>& kf, float x, float z);
+
+    // Calculates a translation for the published map so that it
+    // is centered at the origin.
+    geometry_msgs::Point calcWorldTranslation(std::vector<KeyFrame*>& kf);
 
     ros::Publisher publisher;
 
@@ -67,11 +75,16 @@ private:
 
     float fCameraSize;
     float fPointSize;
+    float world_scale;
+    geometry_msgs::Point world_translation;
 
     cv::Mat mCameraPose;
     bool mbCameraUpdated;
 
     boost::mutex mMutexCamera;
+
+    tf::TransformBroadcaster mTfBr;
+
 };
 
 } //namespace ORB_SLAM2
