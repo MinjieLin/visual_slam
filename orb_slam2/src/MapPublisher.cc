@@ -129,8 +129,8 @@ void MapPublisher::Refresh()
 {
     // Calculate Scale and Translation Based on KeyFrames
     vector<KeyFrame*> vKeyFrames = mpMap->GetAllKeyFrames();
-    world_translation = calcWorldTranslation(vKeyFrames);
-    world_scale = calcWorldScale(vKeyFrames, 2, 2);
+//    world_translation = calcWorldTranslation(vKeyFrames);
+//    world_scale = calcWorldScale(vKeyFrames, 2, 2);
 
     PublishKeyFrames(vKeyFrames);
 

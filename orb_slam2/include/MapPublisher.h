@@ -75,7 +75,7 @@ private:
 
     float fCameraSize;
     float fPointSize;
-    float world_scale;
+    float world_scale = 1;
     geometry_msgs::Point world_translation;
 
     cv::Mat mCameraPose;
