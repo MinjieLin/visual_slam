@@ -162,9 +162,9 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
             cv::circle(frame, keypoints[i].pt, r, cv::Scalar(255, 0, 0));
         }
         // Publish the image.
-        sensor_msgs::Image::Ptr out_img = cv_bridge::CvImage(img->header,
-                                                             "bgr8", frame).toImageMsg();
-        img_pub_.publish(out_img);
+//        sensor_msgs::Image::Ptr out_img = cv_bridge::CvImage(img->header,
+//                                                             "rgb8", frame).toImageMsg();
+        img_pub_.publish(cv_bridge::toCvShare(img, img->encoding)->toImageMsg());
     }
 
     // Create msgs
