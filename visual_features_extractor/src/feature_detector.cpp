@@ -144,13 +144,9 @@ void proc_img(const sensor_msgs::ImageConstPtr& img,
     cv::Mat descriptors;
 
     // Apply detector
-    if (orb_extractor_.compare("opencv") == 0){
-        cv::ORB ORB_detector_(num_features_, scale_factor_, levels_, ini_thrs_);
-        (ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
-    } else {
-        ORB_SLAM2::ORBextractor ORB_detector_(num_features_,scale_factor_, levels_, ini_thrs_, min_thrs_);
-        (ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
-    }
+    ORB_SLAM2::ORBextractor ORB_detector_(num_features_,scale_factor_, levels_, ini_thrs_, min_thrs_);
+    (ORB_detector_)(src_gray, cv::noArray(), keypoints, descriptors);
+
 
     std::vector<cv::KeyPoint> undistorted_keypoints;
     if (undistort_points_ && keypoints.size() > 0){
@@ -265,12 +261,6 @@ int main(int argc, char **argv) {
     nh.param("scale_factor", scale_factor_, 1.2f);
     nh.param("ini_thrs", ini_thrs_, 20.0f);
     nh.param("min_thrs", min_thrs_, 7.0f);
-    nh.param("orb_extractor", orb_extractor_, std::string("opencv"));
-    if (orb_extractor_.compare("opencv") != 0 && orb_extractor_.compare("orb_slam2") != 0)
-    {
-        ROS_ERROR("orb_extractor parameter should be opencv or orb_slam2");
-        ros::shutdown();
-    }
     num_features_ = num_features_param_;
 
     ROS_INFO("Using a feature extractor from %s with parameters:", orb_extractor_.c_str());

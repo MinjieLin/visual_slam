@@ -13,7 +13,6 @@
 	</node>
 
 	<node name="feature_extractor" type="feature_detector" pkg="visual_features_extractor" output="screen">
-		<param name="orb_extractor" value="orb_slam2"/>  		
 		<param name="num_features" value="4000"/>
 		<param name="scale_factor" value="1.2f"/>
 		<param name="levels" value="8"/>
