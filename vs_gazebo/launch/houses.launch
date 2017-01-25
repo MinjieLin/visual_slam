@@ -1,9 +1,22 @@
 <launch>
+  <include file="$(find orb_slam2)/launch/no_cam.launch"/>
+  
+  <param name="robot_description" textfile="$(find vs_gazebo)/urdf/robot.urdf" />
+  
+  <node name="state_pub" type="robot_state_publisher" pkg="robot_state_publisher"/>
+  
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find vs_gazebo)/worlds/houses.world"/>
     <!-- more default parameters can be changed here -->
   </include>
 
-  <node name="model_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -file urdf/robot.urdf  -model romina -z .1" output="screen"/>
+  <node name="model_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -file $(find vs_gazebo)/urdf/robot.urdf  -model romina -z .1" output="screen"/>
 
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find vs_gazebo)/launch/houses.rviz" output="log" respawn="true"/>
+  
+  <node pkg="rostopic" type="rostopic" name="rostopic" args="pub -1 /cmd_vel geometry_msgs/Twist '{linear: {x: 0.3, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: .5}}'"/>
+  
+  
+  
 </launch>
+
