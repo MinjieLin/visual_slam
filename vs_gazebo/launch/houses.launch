@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find vs_gazebo)/worlds/houses.world"/>
+    <!-- more default parameters can be changed here -->
+  </include>
+
+  <node name="model_spawn" pkg="gazebo_ros" type="spawn_model" args="-urdf -file urdf/robot.urdf  -model romina -z .1" output="screen"/>
+
+</launch>
