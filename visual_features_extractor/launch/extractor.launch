@@ -11,7 +11,7 @@
 
 		<param name="undistort_points" value="true"/>
 		<param name="subscribe_to_state" value="true"/>
-		<param name="publish_image_" value="false"/>		
+		<param name="publish_image_" value="true"/>		
 		<remap from="~image_in" to="/usb_cam/image_raw"/>
 		<remap from="~image_out" to="~debug"/>
 		<remap from="~camera_info" to="/usb_cam/camera_info"/>
