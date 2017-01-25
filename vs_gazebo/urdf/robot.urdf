@@ -182,7 +182,7 @@
 		  <joint_properties damping="0.0" friction="10"/>
 	  </joint>
 
-    <link name="usb_cam">
+    <link name="sim_cam">
       <visual>
 			  <geometry>
 				  <sphere radius="0.025"/>
@@ -202,10 +202,20 @@
 			  <inertia ixx="0.0104" ixy="0" ixz="0" iyy="0.05638" iyz="0" izz="0.0500"/>
 		  </inertial>
 	  </link>
-    <joint name="top_to_usb_cam" type="fixed">
+    <joint name="top_to_sim_cam" type="fixed">
 		  <parent link="top"/>
-		  <child link="usb_cam"/>
+		  <child link="sim_cam"/>
 		  <origin rpy="0 0 0" xyz="0.06 0 0.05"/>
+		  <limit effort="100" velocity="100"/>
+		  <joint_properties damping="0.0" friction="10"/>
+	  </joint>
+	  
+	  <link name="usb_cam">
+	  </link>
+    <joint name="usb_cam_sim_cam" type="fixed">
+		  <parent link="sim_cam"/>
+		  <child link="usb_cam"/>
+		  <origin rpy="-1.59 0 -1.57" xyz="0 0 0"/>
 		  <limit effort="100" velocity="100"/>
 		  <joint_properties damping="0.0" friction="10"/>
 	  </joint>
@@ -213,7 +223,7 @@
 
     
     <!-- camera -->
-    <gazebo reference="usb_cam">
+    <gazebo reference="sim_cam">
       <sensor type="camera" name="camera1">
         <update_rate>30.0</update_rate>
         <camera name="head">
@@ -242,7 +252,7 @@
           <cameraName>/usb_cam</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>camera_link</frameName>
+          <frameName>usb_cam</frameName>
           <hackBaseline>0.07</hackBaseline>
           <distortionK1>0.0</distortionK1>
           <distortionK2>0.0</distortionK2>
@@ -273,4 +283,5 @@
         <publishWheelJointState>true</publishWheelJointState>
       </plugin>
     </gazebo>
+
   </robot>

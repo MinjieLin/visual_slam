@@ -50,7 +50,7 @@ Visualization Manager:
         X: 0
         Y: 0
         Z: 0
-      Plane: XY
+      Plane: XZ
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
@@ -99,6 +99,11 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        sim_cam:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         top:
           Alpha: 1
           Show Axes: false
@@ -108,7 +113,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -119,27 +123,29 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         base:
-          Value: true
+          Value: false
         caster:
-          Value: true
+          Value: false
         front_left_wheel:
-          Value: true
+          Value: false
         front_right_wheel:
-          Value: true
+          Value: false
         odom:
-          Value: true
+          Value: false
         robot:
-          Value: true
+          Value: false
+        sim_cam:
+          Value: false
         slam/camera:
-          Value: true
+          Value: false
         slam/world:
-          Value: true
+          Value: false
         top:
-          Value: true
+          Value: false
         usb_cam:
-          Value: true
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -155,10 +161,11 @@ Visualization Manager:
             front_right_wheel:
               {}
             top:
-              usb_cam:
-                slam/world:
-                  slam/camera:
-                    {}
+              sim_cam:
+                usb_cam:
+                  slam/world:
+                    slam/camera:
+                      {}
       Update Interval: 0
       Value: true
     - Class: rviz/Image
@@ -197,7 +204,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.75071073
+      Distance: 1.7850163
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -211,10 +218,10 @@ Visualization Manager:
       Focal Shape Size: 0.0500000007
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: -0.219797149
+      Pitch: -0.754797339
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.41041088
+      Yaw: 4.81857824
     Saved: ~
 Window Geometry:
   Displays:

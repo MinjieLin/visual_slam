@@ -1,7 +1,7 @@
 <launch>
     <include file="$(find visual_features_extractor)/launch/extractor.launch"/>
 
-    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen" launch-prefix="nice -10 ">
+    <node pkg="orb_slam2" type="ros_mono" name="slam" output="screen" launch-prefix="nice -10 " respawn="true">
       <param name="~debug_view" value="true"/>
       <param name="~vocabulary_path" value="$(find orb_slam2)/Vocabulary/ORBvoc.txt"/>
       <param name="~settings_path" value="$(find orb_slam2)/Examples/Monocular/test.yaml"/>
