@@ -312,15 +312,13 @@ void MapPublisher::PublishCurrentCamera(cv::Mat &Tcw)
 
     cv::Mat Twc = Tcw.inv();
 
-    cv::Mat rotCv = Tcw(cv::Range(0, 2), cv::Range(0, 2));
-    cv::Mat transCv = Tcw(cv::Range(0, 2), cv::Range(3,3));
 
-    tf::Matrix3x3 rot(rotCv.at<float>(0),rotCv.at<float>(1),rotCv.at<float>(2),
-        rotCv.at<float>(3),rotCv.at<float>(4),rotCv.at<float>(5),
-        rotCv.at<float>(6),rotCv.at<float>(6),rotCv.at<float>(8));
-    tf::Vector3 trans((transCv.at<float>(0) + world_translation.x) * world_scale,
-        (transCv.at<float>(1) + world_translation.y) * world_scale,
-        (transCv.at<float>(2) + world_translation.z) * world_scale);
+    tf::Matrix3x3 rot(Twc.at<float>(0,0),Twc.at<float>(0,1),Twc.at<float>(0,2),
+        Twc.at<float>(1,0),Twc.at<float>(1,1),Twc.at<float>(1,2),
+        Twc.at<float>(2,0),Twc.at<float>(2,1),Twc.at<float>(2,2));
+    tf::Vector3 trans((Twc.at<float>(0,3) + world_translation.x) * world_scale,
+        (Twc.at<float>(1,3) + world_translation.y) * world_scale,
+        (Twc.at<float>(2,3) + world_translation.z) * world_scale);
 
     tf::Transform t(rot, trans);
 
